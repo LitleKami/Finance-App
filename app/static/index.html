@@ -1,0 +1,569 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger &mdash; Purpose Wallet</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2420;
+    --ink-2:#212C26;
+    --ink-3:#2A362F;
+    --paper:#EFE7D8;
+    --paper-2:#E6DCC6;
+    --moss:#5C7A5E;
+    --moss-dark:#3E5940;
+    --oxblood:#8B3A3A;
+    --gold:#C9A227;
+    --inkblue:#2C4A52;
+    --text-on-paper:#2A241C;
+    --text-on-ink:#EFE7D8;
+    --text-muted:#9BA89C;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;}
+  body{
+    background:var(--ink);
+    color:var(--text-on-ink);
+    font-family:'Inter',sans-serif;
+    min-height:100vh;
+    padding-bottom:4rem;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
+  .mono{font-family:'IBM Plex Mono',monospace;}
+  a{color:inherit;}
+
+  /* ---------- header ---------- */
+  header{
+    padding:1.5rem 1.25rem 1rem;
+    border-bottom:1px solid var(--ink-3);
+    display:flex; align-items:baseline; justify-content:space-between;
+  }
+  header h1{font-size:1.5rem; letter-spacing:0.01em;}
+  header h1 span{color:var(--gold);}
+  #accountBadge{font-size:0.75rem; color:var(--text-muted); font-family:'IBM Plex Mono',monospace;}
+
+  main{max-width:640px; margin:0 auto; padding:1.25rem;}
+  .hidden{display:none !important;}
+
+  /* ---------- generic panel ---------- */
+  .panel{
+    background:var(--ink-2);
+    border:1px solid var(--ink-3);
+    border-radius:6px;
+    padding:1.25rem;
+    margin-bottom:1.25rem;
+  }
+  .panel h2{font-size:1.1rem; margin-bottom:0.75rem;}
+  label{display:block; font-size:0.8rem; color:var(--text-muted); margin:0.75rem 0 0.3rem;}
+  input, select{
+    width:100%; padding:0.65rem 0.7rem; border-radius:4px;
+    border:1px solid var(--ink-3); background:var(--ink);
+    color:var(--text-on-ink); font-family:'Inter',sans-serif; font-size:0.95rem;
+  }
+  input:focus, select:focus, button:focus{outline:2px solid var(--gold); outline-offset:1px;}
+
+  button{
+    font-family:'Inter',sans-serif; font-weight:600; font-size:0.9rem;
+    padding:0.7rem 1rem; border-radius:4px; border:none; cursor:pointer;
+    margin-top:0.9rem;
+  }
+  .btn-primary{background:var(--moss); color:#fff;}
+  .btn-primary:hover{background:var(--moss-dark);}
+  .btn-secondary{background:transparent; color:var(--text-on-ink); border:1px solid var(--ink-3);}
+  .btn-secondary:hover{border-color:var(--gold);}
+  .btn-danger{background:var(--oxblood); color:#fff;}
+  .btn-block{width:100%;}
+  .btn-row{display:flex; gap:0.6rem;}
+  .btn-row button{flex:1;}
+
+  .tabbar{display:flex; gap:0.4rem; margin-bottom:1rem;}
+  .tabbar button{
+    flex:1; margin-top:0; background:var(--ink); color:var(--text-muted);
+    border:1px solid var(--ink-3);
+  }
+  .tabbar button.active{background:var(--ink-3); color:var(--text-on-ink); border-color:var(--gold);}
+
+  .msg{font-size:0.85rem; margin-top:0.6rem; padding:0.5rem 0.7rem; border-radius:4px;}
+  .msg.error{background:rgba(139,58,58,0.25); color:#E8AFAF; border:1px solid var(--oxblood);}
+  .msg.ok{background:rgba(92,122,94,0.25); color:#B9D3BA; border:1px solid var(--moss);}
+
+  /* ---------- envelope card (signature element) ---------- */
+  .envelope{
+    position:relative;
+    background:var(--paper);
+    color:var(--text-on-paper);
+    border-radius:2px;
+    margin-bottom:1.1rem;
+    padding:1.4rem 1.1rem 1.1rem;
+    box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  }
+  .envelope::before{
+    /* torn flap edge */
+    content:"";
+    position:absolute; top:-1px; left:0; right:0; height:14px;
+    background:var(--ink);
+    clip-path:polygon(
+      0% 100%, 4% 20%, 8% 90%, 12% 10%, 16% 85%, 20% 15%, 24% 95%, 28% 5%,
+      32% 80%, 36% 20%, 40% 100%, 44% 10%, 48% 90%, 52% 15%, 56% 95%, 60% 5%,
+      64% 85%, 68% 20%, 72% 100%, 76% 10%, 80% 90%, 84% 15%, 88% 95%, 92% 10%,
+      96% 85%, 100% 100%
+    );
+  }
+  .envelope-top{display:flex; justify-content:space-between; align-items:flex-start; gap:0.6rem;}
+  .envelope-category{
+    font-family:'Fraunces',serif; font-weight:600; font-size:1.15rem;
+    text-transform:capitalize;
+  }
+  .envelope-freq{font-size:0.7rem; color:#6B6252; text-transform:uppercase; letter-spacing:0.05em;}
+  .seal{
+    width:38px; height:38px; border-radius:50%;
+    background:var(--oxblood); color:#fff;
+    display:flex; align-items:center; justify-content:center;
+    font-size:1.1rem; flex-shrink:0;
+    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.25);
+  }
+  .envelope-balance{font-family:'IBM Plex Mono',monospace; font-size:1.9rem; font-weight:600; margin-top:0.5rem;}
+  .envelope-balance .unit{font-size:0.9rem; color:#6B6252; font-weight:400; margin-left:0.3rem;}
+  .progress-track{
+    background:var(--paper-2); border-radius:3px; height:7px; margin-top:0.6rem; overflow:hidden;
+  }
+  .progress-fill{background:var(--gold); height:100%; border-radius:3px;}
+  .progress-label{font-size:0.72rem; color:#6B6252; margin-top:0.3rem;}
+  .envelope-actions{display:flex; gap:0.6rem; margin-top:0.9rem;}
+  .envelope-actions button{margin-top:0; flex:1; font-size:0.82rem; padding:0.55rem;}
+  .btn-fund{background:var(--inkblue); color:#fff;}
+  .btn-spend{background:var(--ink); color:var(--paper); border:1px solid var(--text-on-paper);}
+
+  /* ---------- ledger / activity ---------- */
+  .ledger-row{
+    display:flex; justify-content:space-between; align-items:center;
+    padding:0.65rem 0; border-bottom:1px solid var(--ink-3); font-size:0.85rem;
+  }
+  .ledger-row:last-child{border-bottom:none;}
+  .ledger-merchant{font-weight:500;}
+  .ledger-amount{font-family:'IBM Plex Mono',monospace;}
+  .stamp{
+    font-family:'IBM Plex Mono',monospace; font-size:0.62rem; font-weight:600;
+    text-transform:uppercase; letter-spacing:0.06em;
+    padding:0.2rem 0.45rem; border-radius:2px; border:1.5px solid currentColor;
+    transform:rotate(-4deg); display:inline-block;
+  }
+  .stamp-settled{color:var(--moss);}
+  .stamp-rejected{color:var(--oxblood);}
+  .stamp-pending{color:var(--gold);}
+  .stamp-disputed{color:#C77F3A;}
+
+  /* ---------- modal ---------- */
+  .modal-backdrop{
+    position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    display:flex; align-items:center; justify-content:center; padding:1.25rem; z-index:20;
+  }
+  .modal{
+    background:var(--paper); color:var(--text-on-paper); border-radius:6px;
+    padding:1.4rem; max-width:380px; width:100%;
+  }
+  .modal h3{margin-bottom:0.4rem;}
+  .modal p{font-size:0.85rem; color:#6B6252; margin:0 0 0.8rem;}
+  .modal input{border:1px solid #C9BFA8; background:#fff; color:var(--text-on-paper);}
+
+  .empty-note{color:var(--text-muted); font-size:0.85rem; text-align:center; padding:1.2rem 0;}
+  .demo-toggle{display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); margin-top:0.9rem;}
+  footer{text-align:center; color:var(--text-muted); font-size:0.72rem; padding:2rem 1rem 0;}
+</style>
+</head>
+<body>
+
+<header>
+  <h1>Ledger<span>.</span></h1>
+  <div id="accountBadge"></div>
+</header>
+
+<main>
+
+  <!-- ===== AUTH SCREEN ===== -->
+  <section id="authScreen" class="panel hidden">
+    <h2>Open your ledger</h2>
+    <div class="tabbar">
+      <button id="tabLogin" class="active" onclick="switchTab('login')">I have an account</button>
+      <button id="tabRegister" onclick="switchTab('register')">Register</button>
+    </div>
+
+    <div id="loginForm">
+      <label for="loginUserId">Account ID</label>
+      <input id="loginUserId" placeholder="paste your user_id">
+      <button class="btn-primary btn-block" onclick="loginExisting()">Enter</button>
+    </div>
+
+    <div id="registerForm" class="hidden">
+      <label for="regName">Full name</label>
+      <input id="regName" placeholder="Ada Eze">
+      <label for="regEmail">Email</label>
+      <input id="regEmail" type="email" placeholder="you@example.com">
+      <label for="regPin">Choose a 4-digit PIN</label>
+      <input id="regPin" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
+      <button class="btn-primary btn-block" onclick="registerNew()">Create account</button>
+    </div>
+
+    <div id="authMsg"></div>
+  </section>
+
+  <!-- ===== DASHBOARD ===== -->
+  <section id="dashScreen" class="hidden">
+
+    <div class="panel">
+      <h2>Your envelopes</h2>
+      <div id="walletList"></div>
+      <button class="btn-secondary btn-block" onclick="openNewWalletForm()">+ New envelope</button>
+
+      <div id="newWalletForm" class="hidden">
+        <label for="newCategory">Purpose</label>
+        <select id="newCategory">
+          <option value="transport">Transport</option>
+          <option value="food">Food</option>
+          <option value="rent">Rent</option>
+          <option value="school_fees">School fees</option>
+          <option value="healthcare">Healthcare</option>
+          <option value="electricity">Electricity</option>
+          <option value="water">Water</option>
+          <option value="fuel">Fuel</option>
+          <option value="groceries">Groceries</option>
+          <option value="other">Other</option>
+        </select>
+        <label for="newTarget">Savings target (optional)</label>
+        <input id="newTarget" type="number" placeholder="e.g. 20000">
+        <label for="newFreq">Contribution frequency</label>
+        <select id="newFreq">
+          <option value="manual">Manual</option>
+          <option value="daily">Daily</option>
+          <option value="weekly">Weekly</option>
+          <option value="monthly">Monthly</option>
+        </select>
+        <div class="btn-row">
+          <button class="btn-secondary" onclick="closeNewWalletForm()">Cancel</button>
+          <button class="btn-primary" onclick="createWallet()">Seal envelope</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="panel">
+      <h2>Activity</h2>
+      <div id="activityList"><p class="empty-note">Select "Spend" on an envelope to see its ledger here.</p></div>
+    </div>
+
+    <button class="btn-secondary btn-block" onclick="logout()">Switch account</button>
+  </section>
+
+</main>
+
+<!-- ===== FUND MODAL ===== -->
+<div id="fundModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>Add money</h3>
+    <p>Simulated funding — stands in for a real funding method.</p>
+    <label for="fundAmount">Amount</label>
+    <input id="fundAmount" type="number" placeholder="1000">
+    <div id="fundMsg"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeModal('fundModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitFund()">Add</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== SPEND MODAL ===== -->
+<div id="spendModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>Spend from this envelope</h3>
+    <p id="spendSub"></p>
+    <label for="merchantSelect">Merchant</label>
+    <select id="merchantSelect"></select>
+    <div class="demo-toggle">
+      <input type="checkbox" id="anyCategoryToggle" onchange="loadMerchantsForSpend()">
+      <label for="anyCategoryToggle" style="margin:0;">Demo: show merchants outside this category (to see a rejection)</label>
+    </div>
+    <label for="spendAmount">Amount</label>
+    <input id="spendAmount" type="number" placeholder="500">
+    <div id="spendMsg"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeModal('spendModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitSpend()">Continue</button>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PIN CONFIRM MODAL ===== -->
+<div id="pinModal" class="modal-backdrop hidden">
+  <div class="modal">
+    <h3>Confirm payment</h3>
+    <p id="pinSub"></p>
+    <label for="pinInput">PIN</label>
+    <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
+    <div id="pinMsg"></div>
+    <div class="btn-row">
+      <button class="btn-secondary" onclick="closeModal('pinModal')">Cancel</button>
+      <button class="btn-primary" onclick="submitConfirm()">Confirm &amp; pay</button>
+    </div>
+  </div>
+</div>
+
+<footer>Purpose Wallet MVP &middot; simulated currency, no real funds move</footer>
+
+<script>
+const API = ""; // same-origin
+let state = { userId: null, wallets: [], activeWalletId: null, pendingTxnId: null };
+
+function $(id){ return document.getElementById(id); }
+
+async function api(path, method="GET", body=null){
+  const opts = { method, headers: {"Content-Type":"application/json"} };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok){
+    const err = new Error(data.detail || "Request failed");
+    err.detail = data.detail;
+    throw err;
+  }
+  return data;
+}
+
+// ---------- boot ----------
+window.addEventListener("DOMContentLoaded", () => {
+  const saved = localStorage.getItem("pw_user_id");
+  if(saved){
+    state.userId = saved;
+    enterDashboard();
+  } else {
+    $("authScreen").classList.remove("hidden");
+  }
+});
+
+function switchTab(tab){
+  $("tabLogin").classList.toggle("active", tab==="login");
+  $("tabRegister").classList.toggle("active", tab==="register");
+  $("loginForm").classList.toggle("hidden", tab!=="login");
+  $("registerForm").classList.toggle("hidden", tab!=="register");
+  $("authMsg").innerHTML = "";
+}
+
+function showMsg(el, text, type){
+  el.innerHTML = `<div class="msg ${type}">${text}</div>`;
+}
+
+async function loginExisting(){
+  const id = $("loginUserId").value.trim();
+  if(!id){ showMsg($("authMsg"), "Enter an account ID.", "error"); return; }
+  try{
+    await api(`/users/${id}`);
+    state.userId = id;
+    localStorage.setItem("pw_user_id", id);
+    enterDashboard();
+  }catch(e){
+    showMsg($("authMsg"), "No account found with that ID.", "error");
+  }
+}
+
+async function registerNew(){
+  const name = $("regName").value.trim();
+  const email = $("regEmail").value.trim();
+  const pin = $("regPin").value.trim();
+  if(!name || !email || !pin){
+    showMsg($("authMsg"), "Fill in name, email and a PIN.", "error");
+    return;
+  }
+  try{
+    const user = await api("/users/register", "POST", {full_name:name, email});
+    await api(`/users/${user.id}/kyc/verify?approve=true`, "POST");
+    await api(`/users/${user.id}/pin`, "POST", {pin});
+    state.userId = user.id;
+    localStorage.setItem("pw_user_id", user.id);
+    enterDashboard();
+  }catch(e){
+    showMsg($("authMsg"), e.detail || "Could not register. Email may already be in use.", "error");
+  }
+}
+
+function logout(){
+  localStorage.removeItem("pw_user_id");
+  state = { userId:null, wallets:[], activeWalletId:null, pendingTxnId:null };
+  $("dashScreen").classList.add("hidden");
+  $("accountBadge").textContent = "";
+  $("authScreen").classList.remove("hidden");
+  switchTab("login");
+}
+
+async function enterDashboard(){
+  $("authScreen").classList.add("hidden");
+  $("dashScreen").classList.remove("hidden");
+  $("accountBadge").textContent = state.userId.slice(0,8) + "…";
+  await loadWallets();
+}
+
+// ---------- wallets ----------
+async function loadWallets(){
+  state.wallets = await api(`/wallets/user/${state.userId}`);
+  const list = $("walletList");
+  if(state.wallets.length === 0){
+    list.innerHTML = `<p class="empty-note">No envelopes yet — seal your first one below.</p>`;
+    return;
+  }
+  list.innerHTML = state.wallets.map(w => `
+    <div class="envelope">
+      <div class="envelope-top">
+        <div>
+          <div class="envelope-category">${w.category.replace('_',' ')}</div>
+          <div class="envelope-freq">${w.frequency || 'manual'}</div>
+        </div>
+        <div class="seal">&#128274;</div>
+      </div>
+      <div class="envelope-balance">${w.balance.toLocaleString()}<span class="unit">SIM</span></div>
+      ${w.target_amount ? `
+        <div class="progress-track"><div class="progress-fill" style="width:${Math.min(w.progress_pct,100)}%"></div></div>
+        <div class="progress-label">${w.progress_pct}% of ${w.target_amount.toLocaleString()} SIM target</div>
+      ` : ``}
+      <div class="envelope-actions">
+        <button class="btn-fund" onclick="openFundModal('${w.id}')">Add money</button>
+        <button class="btn-spend" onclick="openSpendModal('${w.id}')">Spend</button>
+      </div>
+    </div>
+  `).join("");
+}
+
+function openNewWalletForm(){ $("newWalletForm").classList.remove("hidden"); }
+function closeNewWalletForm(){ $("newWalletForm").classList.add("hidden"); }
+
+async function createWallet(){
+  const category = $("newCategory").value;
+  const target = $("newTarget").value;
+  const frequency = $("newFreq").value;
+  try{
+    await api("/wallets", "POST", {
+      user_id: state.userId, category,
+      target_amount: target ? parseFloat(target) : null,
+      frequency
+    });
+    closeNewWalletForm();
+    $("newTarget").value = "";
+    await loadWallets();
+  }catch(e){ alert(e.detail || "Could not create envelope."); }
+}
+
+// ---------- fund ----------
+function openFundModal(walletId){
+  state.activeWalletId = walletId;
+  $("fundAmount").value = "";
+  $("fundMsg").innerHTML = "";
+  $("fundModal").classList.remove("hidden");
+}
+async function submitFund(){
+  const amount = parseFloat($("fundAmount").value);
+  if(!amount || amount <= 0){ showMsg($("fundMsg"), "Enter a valid amount.", "error"); return; }
+  try{
+    await api(`/wallets/${state.activeWalletId}/fund`, "POST", {amount});
+    closeModal("fundModal");
+    await loadWallets();
+  }catch(e){ showMsg($("fundMsg"), e.detail || "Funding failed.", "error"); }
+}
+
+// ---------- spend ----------
+function openSpendModal(walletId){
+  state.activeWalletId = walletId;
+  const wallet = state.wallets.find(w => w.id === walletId);
+  $("spendSub").textContent = `From your ${wallet.category.replace('_',' ')} envelope — only matching merchants can be paid.`;
+  $("spendAmount").value = "";
+  $("spendMsg").innerHTML = "";
+  $("anyCategoryToggle").checked = false;
+  loadMerchantsForSpend();
+  $("spendModal").classList.remove("hidden");
+  loadActivity(walletId);
+}
+
+async function loadMerchantsForSpend(){
+  const wallet = state.wallets.find(w => w.id === state.activeWalletId);
+  const anyCategory = $("anyCategoryToggle").checked;
+  const url = anyCategory ? `/merchants?approved_only=true` : `/merchants?category=${wallet.category}&approved_only=true`;
+  try{
+    const merchants = await api(url);
+    const sel = $("merchantSelect");
+    if(merchants.length === 0){
+      sel.innerHTML = `<option value="">No approved merchants yet</option>`;
+      return;
+    }
+    sel.innerHTML = merchants.map(m => `<option value="${m.id}">${m.business_name} (${m.category.replace('_',' ')})</option>`).join("");
+  }catch(e){
+    $("merchantSelect").innerHTML = `<option value="">Could not load merchants</option>`;
+  }
+}
+
+async function submitSpend(){
+  const merchantId = $("merchantSelect").value;
+  const amount = parseFloat($("spendAmount").value);
+  if(!merchantId || !amount || amount <= 0){
+    showMsg($("spendMsg"), "Pick a merchant and enter an amount.", "error");
+    return;
+  }
+  try{
+    const txn = await api("/payments/initiate", "POST", {
+      wallet_id: state.activeWalletId, merchant_id: merchantId, amount
+    });
+    state.pendingTxnId = txn.id;
+    closeModal("spendModal");
+    $("pinSub").textContent = `Paying ${amount.toLocaleString()} SIM. Enter your PIN to authorize.`;
+    $("pinInput").value = "";
+    $("pinMsg").innerHTML = "";
+    $("pinModal").classList.remove("hidden");
+  }catch(e){
+    // purpose mismatch or insufficient funds land here — show the rejection stamp
+    showMsg($("spendMsg"), "&#10007; REJECTED &mdash; " + (e.detail || "payment could not be initiated."), "error");
+  }
+}
+
+async function submitConfirm(){
+  const pin = $("pinInput").value.trim();
+  if(!pin){ showMsg($("pinMsg"), "Enter your PIN.", "error"); return; }
+  try{
+    await api(`/payments/${state.pendingTxnId}/confirm`, "POST", {pin});
+    closeModal("pinModal");
+    await loadWallets();
+    await loadActivity(state.activeWalletId);
+  }catch(e){
+    showMsg($("pinMsg"), e.detail || "PIN incorrect or payment could not be confirmed.", "error");
+  }
+}
+
+// ---------- activity / ledger ----------
+async function loadActivity(walletId){
+  try{
+    const txns = await api(`/payments/wallet/${walletId}`);
+    const list = $("activityList");
+    if(txns.length === 0){
+      list.innerHTML = `<p class="empty-note">No transactions on this envelope yet.</p>`;
+      return;
+    }
+    list.innerHTML = txns.map(t => `
+      <div class="ledger-row">
+        <div>
+          <div class="ledger-merchant">${t.amount.toLocaleString()} SIM</div>
+          <div class="mono" style="font-size:0.7rem;color:var(--text-muted);">${new Date(t.created_at).toLocaleString()}</div>
+        </div>
+        <span class="stamp ${stampClass(t.status)}">${t.status.replace(/_/g,' ')}</span>
+      </div>
+    `).join("");
+  }catch(e){ /* silent */ }
+}
+
+function stampClass(status){
+  if(status === "settled") return "stamp-settled";
+  if(status.startsWith("rejected") || status.startsWith("failed")) return "stamp-rejected";
+  if(status === "disputed") return "stamp-disputed";
+  return "stamp-pending";
+}
+
+function closeModal(id){ $(id).classList.add("hidden"); }
+</script>
+
+</body>
+</html>
