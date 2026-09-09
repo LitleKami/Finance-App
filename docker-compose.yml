@@ -1,0 +1,15 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - PORT=8000
+      # Mirrors the Railway volume setup: point the SQLite file at a
+      # mounted path so it survives container restarts/rebuilds.
+      - RAILWAY_VOLUME_MOUNT_PATH=/data
+    volumes:
+      - db_data:/data
+
+volumes:
+  db_data:
