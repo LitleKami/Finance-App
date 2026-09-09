@@ -177,7 +177,7 @@
 <body>
 
 <header>
-  <h1>Ledger<span>.</span></h1>
+  <a href="/" style="text-decoration:none; color:inherit; display:inline-block;"><h1>Ledger<span>.</span></h1></a>
   <div id="accountBadge"></div>
 </header>
 
@@ -192,8 +192,10 @@
     </div>
 
     <div id="loginForm">
-      <label for="loginUserId">Account ID</label>
-      <input id="loginUserId" placeholder="paste your user_id">
+      <label for="loginEmail">Email</label>
+      <input id="loginEmail" type="email" placeholder="you@example.com">
+      <label for="loginPassword">Password</label>
+      <input id="loginPassword" type="password" placeholder="••••••••">
       <button class="btn-primary btn-block" onclick="loginExisting()">Enter</button>
     </div>
 
@@ -202,12 +204,15 @@
       <input id="regName" placeholder="Ada Eze">
       <label for="regEmail">Email</label>
       <input id="regEmail" type="email" placeholder="you@example.com">
-      <label for="regPin">Choose a 4-digit PIN</label>
+      <label for="regPassword">Password (min. 8 characters)</label>
+      <input id="regPassword" type="password" placeholder="••••••••">
+      <label for="regPin">Choose a 4-digit payment PIN</label>
       <input id="regPin" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
       <button class="btn-primary btn-block" onclick="registerNew()">Create account</button>
     </div>
 
     <div id="authMsg"></div>
+    <a href="/merchant" style="display:block; text-align:center; margin-top:1rem; color:var(--text-muted); font-size:0.8rem; text-decoration:none;">Are you a merchant? Go to the merchant portal &rarr;</a>
   </section>
 
   <!-- ===== DASHBOARD ===== -->
@@ -254,6 +259,7 @@
     </div>
 
     <button class="btn-secondary btn-block" onclick="logout()">Switch account</button>
+    <a href="/feedback" style="display:block; text-align:center; margin-top:0.9rem; color:var(--gold); font-size:0.85rem; text-decoration:none;">Give feedback on this app &rarr;</a>
   </section>
 
 </main>
@@ -313,17 +319,18 @@
 
 <script>
 const API = ""; // same-origin
-let state = { userId: null, wallets: [], activeWalletId: null, pendingTxnId: null };
+let state = { user: null, wallets: [], activeWalletId: null, pendingTxnId: null };
 
 function $(id){ return document.getElementById(id); }
 
 async function api(path, method="GET", body=null){
-  const opts = { method, headers: {"Content-Type":"application/json"} };
+  const opts = { method, headers: {"Content-Type":"application/json"}, credentials: "same-origin" };
   if(body) opts.body = JSON.stringify(body);
   const res = await fetch(API + path, opts);
   const data = await res.json().catch(()=>({}));
   if(!res.ok){
     const err = new Error(data.detail || "Request failed");
+    err.status = res.status;
     err.detail = data.detail;
     throw err;
   }
@@ -331,12 +338,15 @@ async function api(path, method="GET", body=null){
 }
 
 // ---------- boot ----------
-window.addEventListener("DOMContentLoaded", () => {
-  const saved = localStorage.getItem("pw_user_id");
-  if(saved){
-    state.userId = saved;
+// No more trusting a locally-stored ID: the httpOnly session cookie (set by
+// the server on login) is sent automatically with this request, and /auth/me
+// is the only source of truth for whether we're actually logged in.
+window.addEventListener("DOMContentLoaded", async () => {
+  try{
+    const user = await api("/auth/me");
+    state.user = user;
     enterDashboard();
-  } else {
+  }catch(e){
     $("authScreen").classList.remove("hidden");
   }
 });
@@ -354,41 +364,44 @@ function showMsg(el, text, type){
 }
 
 async function loginExisting(){
-  const id = $("loginUserId").value.trim();
-  if(!id){ showMsg($("authMsg"), "Enter an account ID.", "error"); return; }
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+  if(!email || !password){ showMsg($("authMsg"), "Enter your email and password.", "error"); return; }
   try{
-    await api(`/users/${id}`);
-    state.userId = id;
-    localStorage.setItem("pw_user_id", id);
+    const user = await api("/auth/login", "POST", {email, password});
+    state.user = user;
     enterDashboard();
   }catch(e){
-    showMsg($("authMsg"), "No account found with that ID.", "error");
+    showMsg($("authMsg"), e.detail || "Incorrect email or password.", "error");
   }
 }
 
 async function registerNew(){
   const name = $("regName").value.trim();
   const email = $("regEmail").value.trim();
+  const password = $("regPassword").value;
   const pin = $("regPin").value.trim();
-  if(!name || !email || !pin){
-    showMsg($("authMsg"), "Fill in name, email and a PIN.", "error");
+  if(!name || !email || !password || !pin){
+    showMsg($("authMsg"), "Fill in name, email, password and a PIN.", "error");
     return;
   }
   try{
-    const user = await api("/users/register", "POST", {full_name:name, email});
+    const user = await api("/users/register", "POST", {full_name:name, email, password});
     await api(`/users/${user.id}/kyc/verify?approve=true`, "POST");
     await api(`/users/${user.id}/pin`, "POST", {pin});
-    state.userId = user.id;
-    localStorage.setItem("pw_user_id", user.id);
+    // Registering doesn't itself start a session — log in right after with
+    // the same credentials so the server issues a session cookie.
+    const loggedIn = await api("/auth/login", "POST", {email, password});
+    state.user = loggedIn;
     enterDashboard();
   }catch(e){
     showMsg($("authMsg"), e.detail || "Could not register. Email may already be in use.", "error");
   }
 }
 
-function logout(){
-  localStorage.removeItem("pw_user_id");
-  state = { userId:null, wallets:[], activeWalletId:null, pendingTxnId:null };
+async function logout(){
+  try{ await api("/auth/logout", "POST"); }catch(e){ /* clearing local state regardless */ }
+  state = { user:null, wallets:[], activeWalletId:null, pendingTxnId:null };
   $("dashScreen").classList.add("hidden");
   $("accountBadge").textContent = "";
   $("authScreen").classList.remove("hidden");
@@ -398,13 +411,13 @@ function logout(){
 async function enterDashboard(){
   $("authScreen").classList.add("hidden");
   $("dashScreen").classList.remove("hidden");
-  $("accountBadge").textContent = state.userId.slice(0,8) + "…";
+  $("accountBadge").textContent = state.user.full_name;
   await loadWallets();
 }
 
 // ---------- wallets ----------
 async function loadWallets(){
-  state.wallets = await api(`/wallets/user/${state.userId}`);
+  state.wallets = await api(`/wallets/mine`);
   const list = $("walletList");
   if(state.wallets.length === 0){
     list.innerHTML = `<p class="empty-note">No envelopes yet — seal your first one below.</p>`;
@@ -440,8 +453,9 @@ async function createWallet(){
   const target = $("newTarget").value;
   const frequency = $("newFreq").value;
   try{
+    // No user_id sent — the server reads it from the session cookie.
     await api("/wallets", "POST", {
-      user_id: state.userId, category,
+      category,
       target_amount: target ? parseFloat(target) : null,
       frequency
     });

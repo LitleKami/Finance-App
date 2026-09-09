@@ -1,0 +1,225 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger &mdash; Feedback</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#1B2420; --ink-2:#212C26; --ink-3:#2A362F;
+    --paper:#EFE7D8; --paper-2:#E6DCC6;
+    --moss:#5C7A5E; --moss-dark:#3E5940;
+    --oxblood:#8B3A3A; --gold:#C9A227; --inkblue:#2C4A52;
+    --text-on-paper:#2A241C; --text-on-ink:#EFE7D8; --text-muted:#9BA89C;
+  }
+  *{box-sizing:border-box;}
+  body{
+    margin:0; background:var(--ink); color:var(--text-on-ink);
+    font-family:'Inter',sans-serif; min-height:100vh;
+  }
+  h1,h2,h3{font-family:'Fraunces',serif; font-weight:600; margin:0;}
+  header{
+    padding:1.5rem 1.25rem 1rem; border-bottom:1px solid var(--ink-3);
+  }
+  header h1{font-size:1.5rem;}
+  header h1 span{color:var(--gold);}
+  header p{color:var(--text-muted); font-size:0.85rem; margin:0.3rem 0 0;}
+  main{max-width:520px; margin:0 auto; padding:1.25rem 1.25rem 3rem;}
+  .hidden{display:none !important;}
+
+  .card{
+    background:var(--paper); color:var(--text-on-paper);
+    border-radius:6px; padding:1.4rem 1.2rem;
+    box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  }
+  .card::before{
+    content:"TEAM MEMO";
+    display:inline-block; font-family:'IBM Plex Mono',monospace;
+    font-size:0.65rem; letter-spacing:0.08em; color:#8A7F63;
+    border:1px solid #C9BFA8; border-radius:2px; padding:0.15rem 0.5rem;
+    margin-bottom:0.9rem;
+  }
+
+  label{display:block; font-size:0.8rem; color:#6B6252; margin:0.9rem 0 0.35rem; font-weight:500;}
+  input[type=text], select, textarea{
+    width:100%; padding:0.65rem 0.7rem; border-radius:4px;
+    border:1px solid #C9BFA8; background:#fff; color:var(--text-on-paper);
+    font-family:'Inter',sans-serif; font-size:0.95rem;
+  }
+  textarea{resize:vertical; min-height:70px;}
+  input:focus, select:focus, textarea:focus, button:focus{outline:2px solid var(--gold); outline-offset:1px;}
+
+  .stars{display:flex; gap:0.4rem; margin-top:0.2rem;}
+  .star{
+    font-size:1.9rem; cursor:pointer; color:#C9BFA8; line-height:1; user-select:none;
+    background:none; border:none; padding:0;
+  }
+  .star.active{color:var(--gold);}
+  .rating-label{font-size:0.75rem; color:#8A7F63; margin-top:0.3rem; min-height:1em;}
+
+  .check-row{display:flex; align-items:center; gap:0.5rem; margin-top:1rem;}
+  .check-row label{margin:0; font-weight:400; color:var(--text-on-paper);}
+  .check-row input{width:auto;}
+
+  button.submit{
+    width:100%; margin-top:1.3rem; padding:0.8rem; border:none; border-radius:4px;
+    background:var(--moss); color:#fff; font-family:'Inter',sans-serif;
+    font-weight:600; font-size:0.95rem; cursor:pointer;
+  }
+  button.submit:hover{background:var(--moss-dark);}
+  button.submit:disabled{background:#9BA89C; cursor:not-allowed;}
+
+  .msg{font-size:0.85rem; margin-top:0.7rem; padding:0.55rem 0.7rem; border-radius:4px;}
+  .msg.error{background:rgba(139,58,58,0.12); color:var(--oxblood); border:1px solid var(--oxblood);}
+
+  .thanks{
+    background:var(--paper); color:var(--text-on-paper); border-radius:6px;
+    padding:2rem 1.4rem; text-align:center; box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  }
+  .thanks .seal{
+    width:52px; height:52px; border-radius:50%; background:var(--moss); color:#fff;
+    display:flex; align-items:center; justify-content:center; font-size:1.5rem;
+    margin:0 auto 0.9rem;
+  }
+  .thanks h2{margin-bottom:0.4rem;}
+  .thanks p{color:#6B6252; font-size:0.9rem; margin:0 0 1.2rem;}
+  .thanks button{
+    background:transparent; border:1px solid var(--text-on-paper); color:var(--text-on-paper);
+    padding:0.6rem 1.1rem; border-radius:4px; font-family:'Inter',sans-serif;
+    font-weight:600; cursor:pointer;
+  }
+
+  footer{text-align:center; color:var(--text-muted); font-size:0.72rem; padding:2rem 1rem 0;}
+  a.backlink{color:var(--gold); font-size:0.8rem; text-decoration:none;}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/" style="text-decoration:none; color:inherit;"><h1>Ledger<span>.</span> Feedback</h1></a>
+  <p>Tried the app? Tell us what worked and what didn't &mdash; this goes straight to the dev team.</p>
+</header>
+
+<main>
+
+  <section id="formCard" class="card">
+    <h2 style="font-size:1.15rem;">How was your walkthrough?</h2>
+
+    <label for="fbName">Name (optional)</label>
+    <input type="text" id="fbName" placeholder="so we know who to follow up with">
+
+    <label for="fbRole">Your role on this</label>
+    <select id="fbRole">
+      <option value="">Prefer not to say</option>
+      <option value="developer">Developer</option>
+      <option value="founder_stakeholder">Founder / stakeholder</option>
+      <option value="merchant_side">Merchant-side tester</option>
+      <option value="operations_support">Operations / support</option>
+      <option value="other">Other</option>
+    </select>
+
+    <label>Overall, how did it feel to use?</label>
+    <div class="stars" id="starRow">
+      <button type="button" class="star" data-value="1">&#9733;</button>
+      <button type="button" class="star" data-value="2">&#9733;</button>
+      <button type="button" class="star" data-value="3">&#9733;</button>
+      <button type="button" class="star" data-value="4">&#9733;</button>
+      <button type="button" class="star" data-value="5">&#9733;</button>
+    </div>
+    <div class="rating-label" id="ratingLabel"></div>
+
+    <label for="fbLiked">What worked well?</label>
+    <textarea id="fbLiked" placeholder="e.g. the envelope idea was clear, purpose-mismatch rejection made sense"></textarea>
+
+    <label for="fbImprove">What should change or improve?</label>
+    <textarea id="fbImprove" placeholder="e.g. confusing step, missing feature, something felt slow"></textarea>
+
+    <div class="check-row">
+      <input type="checkbox" id="fbBug">
+      <label for="fbBug">Something actually broke (bug, not just a suggestion)</label>
+    </div>
+
+    <div id="fbMsg"></div>
+    <button class="submit" id="submitBtn" onclick="submitFeedback()">Send feedback</button>
+  </section>
+
+  <section id="thanksCard" class="thanks hidden">
+    <div class="seal">&#10003;</div>
+    <h2>Logged.</h2>
+    <p>Thanks &mdash; this feeds straight into the next build pass.</p>
+    <button onclick="resetForm()">Submit another</button>
+  </section>
+
+</main>
+
+<footer>Purpose Wallet MVP &middot; feedback is stored, not published</footer>
+
+<script>
+let selectedRating = 0;
+const labels = {1:"Rough", 2:"Needs work", 3:"Okay", 4:"Good", 5:"Really solid"};
+
+document.querySelectorAll(".star").forEach(btn => {
+  btn.addEventListener("click", () => {
+    selectedRating = parseInt(btn.dataset.value);
+    document.querySelectorAll(".star").forEach(s => {
+      s.classList.toggle("active", parseInt(s.dataset.value) <= selectedRating);
+    });
+    document.getElementById("ratingLabel").textContent = labels[selectedRating] || "";
+  });
+});
+
+function showMsg(text){
+  document.getElementById("fbMsg").innerHTML = `<div class="msg error">${text}</div>`;
+}
+
+async function submitFeedback(){
+  if(selectedRating === 0){ showMsg("Tap a star to rate your experience."); return; }
+
+  const btn = document.getElementById("submitBtn");
+  btn.disabled = true; btn.textContent = "Sending…";
+
+  const payload = {
+    name: document.getElementById("fbName").value.trim() || null,
+    role: document.getElementById("fbRole").value || null,
+    rating: selectedRating,
+    liked: document.getElementById("fbLiked").value.trim() || null,
+    improve: document.getElementById("fbImprove").value.trim() || null,
+    bug_report: document.getElementById("fbBug").checked,
+  };
+
+  try{
+    const res = await fetch("/feedback", {
+      method: "POST",
+      headers: {"Content-Type":"application/json"},
+      body: JSON.stringify(payload),
+    });
+    if(!res.ok){ throw new Error(); }
+    document.getElementById("formCard").classList.add("hidden");
+    document.getElementById("thanksCard").classList.remove("hidden");
+  }catch(e){
+    showMsg("Could not send &mdash; check your connection and try again.");
+    btn.disabled = false; btn.textContent = "Send feedback";
+  }
+}
+
+function resetForm(){
+  selectedRating = 0;
+  document.querySelectorAll(".star").forEach(s => s.classList.remove("active"));
+  document.getElementById("ratingLabel").textContent = "";
+  document.getElementById("fbName").value = "";
+  document.getElementById("fbRole").value = "";
+  document.getElementById("fbLiked").value = "";
+  document.getElementById("fbImprove").value = "";
+  document.getElementById("fbBug").checked = false;
+  document.getElementById("fbMsg").innerHTML = "";
+  document.getElementById("submitBtn").disabled = false;
+  document.getElementById("submitBtn").textContent = "Send feedback";
+  document.getElementById("thanksCard").classList.add("hidden");
+  document.getElementById("formCard").classList.remove("hidden");
+}
+</script>
+
+</body>
+</html>
