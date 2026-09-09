@@ -2,7 +2,7 @@ from fastapi import FastAPI
 from fastapi.responses import FileResponse
 
 from app.database import Base, engine
-from app.routers import users, merchants, wallets, payments, admin, support
+from app.routers import users, merchants, wallets, payments, admin, support, feedback, auth
 
 Base.metadata.create_all(bind=engine)
 
@@ -25,11 +25,23 @@ app.include_router(wallets.router)
 app.include_router(payments.router)
 app.include_router(admin.router)
 app.include_router(support.router)
+app.include_router(feedback.router)
+app.include_router(auth.router)
 
 
 @app.get("/", tags=["Root"], include_in_schema=False)
 def root():
     return FileResponse("app/static/index.html")
+
+
+@app.get("/merchant", tags=["Root"], include_in_schema=False)
+def merchant_page():
+    return FileResponse("app/static/merchant.html")
+
+
+@app.get("/feedback", tags=["Root"], include_in_schema=False)
+def feedback_page():
+    return FileResponse("app/static/feedback.html")
 
 
 @app.get("/status", tags=["Root"])

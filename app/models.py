@@ -3,7 +3,7 @@ import uuid
 from datetime import datetime, timedelta
 
 from sqlalchemy import (
-    Column, String, Float, DateTime, ForeignKey, Enum, Boolean, Text
+    Column, String, Float, DateTime, ForeignKey, Enum, Boolean, Text, Integer
 )
 from sqlalchemy.orm import relationship
 
@@ -84,7 +84,8 @@ class User(Base):
     full_name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False)
     kyc_status = Column(Enum(KYCStatus), default=KYCStatus.pending)
-    pin_hash = Column(String, nullable=True)
+    password_hash = Column(String, nullable=True)   # login credential
+    pin_hash = Column(String, nullable=True)         # separate: payment authorization only
     is_suspended = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
@@ -95,6 +96,8 @@ class Merchant(Base):
     __tablename__ = "merchants"
     id = Column(String, primary_key=True, default=gen_id)
     business_name = Column(String, nullable=False)
+    email = Column(String, unique=True, nullable=True)   # login credential
+    password_hash = Column(String, nullable=True)
     category = Column(Enum(Category), nullable=False)
     status = Column(Enum(MerchantStatus), default=MerchantStatus.pending)
     is_suspended = Column(Boolean, default=False)
@@ -175,4 +178,35 @@ class SupportTicket(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Feedback(Base):
+    """Team feedback on the MVP itself — separate from customer support tickets."""
+    __tablename__ = "feedback"
+    id = Column(String, primary_key=True, default=gen_id)
+    name = Column(String, nullable=True)
+    role = Column(String, nullable=True)
+    rating = Column(Integer, nullable=False)  # 1-5
+    liked = Column(Text, nullable=True)
+    improve = Column(Text, nullable=True)
+    bug_report = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
+class Session(Base):
+    """
+    Server-side session record backing an httpOnly cookie. The cookie itself
+    only holds an opaque random token — nothing readable/forgeable by JS —
+    and every request re-derives identity by looking this row up. Deleting
+    the row (logout) or letting it pass expires_at invalidates the session
+    immediately, with no client-side trust involved.
+    """
+    __tablename__ = "sessions"
+    id = Column(String, primary_key=True, default=gen_id)
+    token = Column(String, unique=True, nullable=False, index=True)
+    subject_type = Column(String, nullable=False)  # "user" | "merchant"
+    subject_id = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+    expires_at = Column(DateTime, nullable=False)
+
+
 HOLD_DURATION_MINUTES = 10  # how long a balance reservation is valid before auto-expiry
+SESSION_DURATION_DAYS = 7   # how long a login session stays valid

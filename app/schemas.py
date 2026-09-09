@@ -5,10 +5,17 @@ from pydantic import BaseModel, EmailStr
 from app.models import Category, KYCStatus, MerchantStatus, TxnStatus, DisputeStatus, TicketStatus
 
 
+# ---- Auth ----
+class LoginRequest(BaseModel):
+    email: EmailStr
+    password: str
+
+
 # ---- Users ----
 class UserCreate(BaseModel):
     full_name: str
     email: EmailStr
+    password: str
 
 
 class UserOut(BaseModel):
@@ -24,18 +31,21 @@ class UserOut(BaseModel):
 
 
 class SetPin(BaseModel):
-    pin: str  # 4-6 digits, demo only — never do this in production
+    pin: str  # 4-6 digits — separate secret from the login password, used only to authorize a payment
 
 
 # ---- Merchants ----
 class MerchantCreate(BaseModel):
     business_name: str
+    email: EmailStr
+    password: str
     category: Category
 
 
 class MerchantOut(BaseModel):
     id: str
     business_name: str
+    email: Optional[str]
     category: Category
     status: MerchantStatus
     is_suspended: bool
@@ -47,7 +57,6 @@ class MerchantOut(BaseModel):
 
 # ---- Wallets ----
 class WalletCreate(BaseModel):
-    user_id: str
     category: Category
     target_amount: Optional[float] = None
     frequency: Optional[str] = None
@@ -142,6 +151,30 @@ class TicketOut(BaseModel):
     description: str
     status: TicketStatus
     resolution_note: Optional[str]
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
+
+
+# ---- Feedback ----
+class FeedbackCreate(BaseModel):
+    name: Optional[str] = None
+    role: Optional[str] = None
+    rating: int
+    liked: Optional[str] = None
+    improve: Optional[str] = None
+    bug_report: bool = False
+
+
+class FeedbackOut(BaseModel):
+    id: str
+    name: Optional[str]
+    role: Optional[str]
+    rating: int
+    liked: Optional[str]
+    improve: Optional[str]
+    bug_report: bool
     created_at: datetime
 
     class Config:

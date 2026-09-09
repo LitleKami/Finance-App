@@ -45,13 +45,6 @@ def post_entry(db: Session, account_type: str, account_id: str,
 
 
 def system_wide_reconciliation(db: Session) -> dict:
-    """
-    Every entry in the ledger should net to zero across the whole system
-    (every debit somewhere is a credit somewhere else). If this doesn't
-    net to zero, something in the money-movement code is broken — this
-    is the check an admin/ops dashboard would run continuously in
-    production.
-    """
     entries = db.query(LedgerEntry).all()
     total = 0.0
     for e in entries:
