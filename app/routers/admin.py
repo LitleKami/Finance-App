@@ -6,8 +6,6 @@ from app.database import get_db
 from app.ledger import system_wide_reconciliation, post_entry, get_balance
 from app.models import EntryType, TxnStatus, DisputeStatus
 
-from app.routers.users import hash_pin
-
 router = APIRouter(prefix="/admin", tags=["Admin"])
 
 
@@ -126,47 +124,20 @@ def resolve_dispute(dispute_id: str, payload: schemas.DisputeResolve, db: Sessio
     return dispute
 
 
-@router.post("/seed")
-def seed_demo_data(db: Session = Depends(get_db)):
-    existing = db.query(models.User).filter(models.User.email == "ada@example.com").first()
-    if existing:
-        return {"status": "already seeded", "user_id": existing.id}
+# ---- Team feedback ----
+@router.get("/feedback", response_model=list[schemas.FeedbackOut])
+def list_feedback(db: Session = Depends(get_db)):
+    return db.query(models.Feedback).order_by(models.Feedback.created_at.desc()).all()
 
-    user = models.User(full_name="Ada Eze", email="ada@example.com",
-                        kyc_status=models.KYCStatus.verified,
-                        pin_hash=hash_pin("1234"))
-    db.add(user)
-    db.flush()
 
-    wallet = models.Wallet(user_id=user.id, category=models.Category.groceries,
-                            target_amount=20000, frequency="weekly")
-    db.add(wallet)
-    db.flush()
-
-    post_entry(db, "wallet", wallet.id, EntryType.credit, 5000, memo="seed funding")
-    post_entry(db, "platform_suspense", "SUSPENSE", EntryType.debit, 5000, memo="seed funding source")
-
-    m1 = models.Merchant(business_name="GreenBasket Stores", category=models.Category.groceries,
-                          status=models.MerchantStatus.approved)
-    m2 = models.Merchant(business_name="FastCab Rides", category=models.Category.transport,
-                          status=models.MerchantStatus.approved)
-    db.add(m1)
-    db.add(m2)
-    db.flush()
-
-    txn = models.Transaction(wallet_id=wallet.id, merchant_id=m1.id, amount=1500,
-                              status=models.TxnStatus.settled)
-    db.add(txn)
-    db.flush()
-
-    post_entry(db, "wallet", wallet.id, EntryType.debit, 1500, txn_id=txn.id, memo="seed payment")
-    post_entry(db, "merchant", m1.id, EntryType.credit, 1500, txn_id=txn.id, memo="seed settlement")
-
-    db.commit()
+@router.get("/feedback/summary")
+def feedback_summary(db: Session = Depends(get_db)):
+    items = db.query(models.Feedback).all()
+    if not items:
+        return {"count": 0, "average_rating": None, "bug_reports": 0}
+    avg = sum(i.rating for i in items) / len(items)
     return {
-        "status": "seeded",
-        "user_id": user.id,
-        "wallet_id": wallet.id,
-        "merchant_groceries": m1.id,
-        "merchant_transport": m2.id,
+        "count": len(items),
+        "average_rating": round(avg, 2),
+        "bug_reports": sum(1 for i in items if i.bug_report),
     }
