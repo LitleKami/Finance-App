@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.deps import get_current_user
 from app.ledger import get_balance, post_entry
 from app.models import EntryType
 
@@ -26,16 +27,22 @@ def _to_out(db: Session, wallet: models.Wallet) -> dict:
     }
 
 
+def _get_owned_wallet(db: Session, wallet_id: str, user: models.User) -> models.Wallet:
+    """404 (not 403) on someone else's wallet — don't confirm it exists to a non-owner."""
+    wallet = db.query(models.Wallet).get(wallet_id)
+    if not wallet or wallet.user_id != user.id:
+        raise HTTPException(404, "Wallet not found")
+    return wallet
+
+
 @router.post("", response_model=schemas.WalletOut)
-def create_wallet(payload: schemas.WalletCreate, db: Session = Depends(get_db)):
-    user = db.query(models.User).get(payload.user_id)
-    if not user:
-        raise HTTPException(404, "User not found")
-    if user.kyc_status != models.KYCStatus.verified:
+def create_wallet(payload: schemas.WalletCreate, db: Session = Depends(get_db),
+                   current_user: models.User = Depends(get_current_user)):
+    if current_user.kyc_status != models.KYCStatus.verified:
         raise HTTPException(403, "User must complete KYC before creating a wallet")
 
     wallet = models.Wallet(
-        user_id=payload.user_id,
+        user_id=current_user.id,
         category=payload.category,
         target_amount=payload.target_amount,
         frequency=payload.frequency,
@@ -47,31 +54,24 @@ def create_wallet(payload: schemas.WalletCreate, db: Session = Depends(get_db)):
     return _to_out(db, wallet)
 
 
-@router.get("/{wallet_id}", response_model=schemas.WalletOut)
-def get_wallet(wallet_id: str, db: Session = Depends(get_db)):
-    wallet = db.query(models.Wallet).get(wallet_id)
-    if not wallet:
-        raise HTTPException(404, "Wallet not found")
-    return _to_out(db, wallet)
-
-
-@router.get("/user/{user_id}", response_model=list[schemas.WalletOut])
-def list_user_wallets(user_id: str, db: Session = Depends(get_db)):
-    wallets = db.query(models.Wallet).filter(models.Wallet.user_id == user_id).all()
+@router.get("/mine", response_model=list[schemas.WalletOut])
+def list_my_wallets(db: Session = Depends(get_db),
+                     current_user: models.User = Depends(get_current_user)):
+    wallets = db.query(models.Wallet).filter(models.Wallet.user_id == current_user.id).all()
     return [_to_out(db, w) for w in wallets]
 
 
+@router.get("/{wallet_id}", response_model=schemas.WalletOut)
+def get_wallet(wallet_id: str, db: Session = Depends(get_db),
+                current_user: models.User = Depends(get_current_user)):
+    wallet = _get_owned_wallet(db, wallet_id, current_user)
+    return _to_out(db, wallet)
+
+
 @router.post("/{wallet_id}/fund", response_model=schemas.WalletOut)
-def fund_wallet(wallet_id: str, payload: schemas.FundWallet, db: Session = Depends(get_db)):
-    """
-    Simulated funding — stands in for 'approved funding method' in the real
-    flow. Credits the wallet and debits a platform suspense account so the
-    ledger still nets to zero (the fake money has to come from somewhere,
-    even in a simulator).
-    """
-    wallet = db.query(models.Wallet).get(wallet_id)
-    if not wallet:
-        raise HTTPException(404, "Wallet not found")
+def fund_wallet(wallet_id: str, payload: schemas.FundWallet, db: Session = Depends(get_db),
+                 current_user: models.User = Depends(get_current_user)):
+    wallet = _get_owned_wallet(db, wallet_id, current_user)
     if payload.amount <= 0:
         raise HTTPException(400, "Amount must be positive")
 
