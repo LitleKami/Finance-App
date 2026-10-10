@@ -179,3 +179,18 @@ class FeedbackOut(BaseModel):
 
     class Config:
         from_attributes = True
+
+
+# ---- Admin ----
+class AdminBootstrap(BaseModel):
+    email: EmailStr
+    password: str
+
+
+class AdminOut(BaseModel):
+    id: str
+    email: str
+    created_at: datetime
+
+    class Config:
+        from_attributes = True
