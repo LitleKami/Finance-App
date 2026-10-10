@@ -191,6 +191,19 @@ class Feedback(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
 
+class Admin(Base):
+    """
+    Staff account for the admin dashboard. No public registration endpoint —
+    the first admin is created once via a bootstrap call that refuses to run
+    again once any admin exists (see /auth/admin-bootstrap).
+    """
+    __tablename__ = "admins"
+    id = Column(String, primary_key=True, default=gen_id)
+    email = Column(String, unique=True, nullable=False)
+    password_hash = Column(String, nullable=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+
 class Session(Base):
     """
     Server-side session record backing an httpOnly cookie. The cookie itself
@@ -202,7 +215,7 @@ class Session(Base):
     __tablename__ = "sessions"
     id = Column(String, primary_key=True, default=gen_id)
     token = Column(String, unique=True, nullable=False, index=True)
-    subject_type = Column(String, nullable=False)  # "user" | "merchant"
+    subject_type = Column(String, nullable=False)  # "user" | "merchant" | "admin"
     subject_id = Column(String, nullable=False)
     created_at = Column(DateTime, default=datetime.utcnow)
     expires_at = Column(DateTime, nullable=False)
