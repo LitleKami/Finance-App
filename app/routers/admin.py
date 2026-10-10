@@ -53,7 +53,6 @@ def suspend_user(user_id: str, db: Session = Depends(get_db),
     db.refresh(user)
     return user
 
-
 # ---- Transaction monitoring ----
 @router.get("/transactions", response_model=list[schemas.TransactionOut])
 def list_transactions(status: TxnStatus = None, db: Session = Depends(get_db),
