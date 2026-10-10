@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Ledger — Admin</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --ink:#10192B; --bg:#F6F7F9; --surface:#FFFFFF; --border:#E3E6EA; --muted:#5B6472;
+    --brand:#0B6E4F; --brand-dark:#09593F; --brand-tint:#E6F2ED;
+    --danger:#B3261E; --danger-tint:#FBEAE9; --warn:#C78A1E; --warn-tint:#FBF1DE;
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0; padding:0;}
+  body{background:var(--bg); color:var(--ink); font-family:'Inter',sans-serif; min-height:100vh; padding-bottom:3rem;}
+  h1,h2{font-family:'Space Grotesk',sans-serif; margin:0;}
+  a{color:inherit;}
+  .hidden{display:none !important;}
+
+  header{background:var(--surface); border-bottom:1px solid var(--border); padding:1.1rem 1.25rem; display:flex; align-items:center; justify-content:space-between;}
+  .brand{display:flex; align-items:center; gap:0.55rem; text-decoration:none;}
+  .brand-mark{width:11px; height:11px; border-radius:3px; background:var(--brand); display:inline-block;}
+  header h1{font-weight:700; font-size:1.25rem;}
+  #adminBadge{font-size:0.82rem; color:var(--muted); font-weight:500;}
+
+  main{max-width:720px; margin:0 auto; padding:1.25rem;}
+  .auth-wrap{max-width:420px; margin:0 auto; padding:1.25rem;}
+
+  .panel{background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1.25rem; margin-bottom:1rem;}
+  .panel h2{font-size:1.05rem; font-weight:600; margin-bottom:0.8rem;}
+
+  .field{margin-top:0.9rem;}
+  .field label{display:block; font-size:0.8rem; color:var(--muted); font-weight:500; margin-bottom:0.3rem;}
+  input, select, textarea{width:100%; padding:0.6rem 0.7rem; border-radius:8px; border:1px solid var(--border); background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:0.9rem;}
+  textarea{resize:vertical; min-height:60px;}
+  input:focus, select:focus, textarea:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-tint); }
+
+  .btn{display:inline-flex; align-items:center; justify-content:center; font-family:'Inter'; font-weight:600; font-size:0.85rem; padding:0.55rem 0.9rem; border-radius:8px; border:none; cursor:pointer;}
+  .btn-primary{background:var(--brand); color:#fff;}
+  .btn-primary:hover{background:var(--brand-dark);}
+  .btn-secondary{background:var(--surface); color:var(--ink); border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--ink);}
+  .btn-danger{background:var(--danger-tint); color:var(--danger); border:1px solid rgba(179,38,30,0.25);}
+  .btn-block{width:100%; margin-top:1rem;}
+  .btn-sm{font-size:0.78rem; padding:0.4rem 0.7rem;}
+
+  .msg{font-size:0.85rem; padding:0.55rem 0.75rem; border-radius:8px; margin-top:0.7rem;}
+  .msg.error{background:var(--danger-tint); color:var(--danger); border:1px solid rgba(179,38,30,0.2);}
+  .msg.ok{background:var(--brand-tint); color:var(--brand); border:1px solid rgba(11,110,79,0.2);}
+
+  /* tabs */
+  .tabbar{display:flex; gap:0.4rem; overflow-x:auto; margin-bottom:1rem; padding-bottom:0.2rem;}
+  .tabbtn{flex:0 0 auto; padding:0.5rem 0.9rem; border-radius:8px; font-size:0.85rem; font-weight:500; color:var(--muted); background:var(--surface); border:1px solid var(--border); cursor:pointer; font-family:'Inter';}
+  .tabbtn.active{background:var(--ink); color:#fff; border-color:var(--ink);}
+
+  /* stat cards */
+  .stat-row{display:flex; gap:0.8rem; flex-wrap:wrap;}
+  .stat-card{flex:1; min-width:120px; background:var(--surface); border:1px solid var(--border); border-radius:10px; padding:1rem;}
+  .stat-card .label{font-size:0.78rem; color:var(--muted); font-weight:500;}
+  .stat-card .value{font-variant-numeric:tabular-nums; font-size:1.5rem; font-weight:700; margin-top:0.3rem;}
+  .stat-card.ok .value{color:var(--brand);}
+  .stat-card.bad .value{color:var(--danger);}
+
+  /* rows */
+  .row{display:flex; justify-content:space-between; align-items:center; gap:0.8rem; padding:0.8rem 0; border-bottom:1px solid var(--border);}
+  .row:last-child{border-bottom:none;}
+  .row-main{flex:1; min-width:0;}
+  .row-title{font-weight:600; font-size:0.92rem;}
+  .row-sub{font-size:0.78rem; color:var(--muted); margin-top:0.15rem; word-break:break-word;}
+  .row-actions{display:flex; gap:0.4rem; flex-shrink:0; flex-wrap:wrap; justify-content:flex-end;}
+
+  .chip{display:inline-block; font-size:0.72rem; font-weight:600; padding:0.2rem 0.55rem; border-radius:999px;}
+  .chip-settled, .chip-approved, .chip-resolved, .chip-resolved_rejected{background:var(--brand-tint); color:var(--brand);}
+  .chip-rejected, .chip-suspended, .chip-resolved_upheld{background:var(--danger-tint); color:var(--danger);}
+  .chip-pending, .chip-open, .chip-investigating, .chip-disputed{background:var(--warn-tint); color:var(--warn);}
+
+  .empty-note{color:var(--muted); font-size:0.85rem; text-align:center; padding:1.2rem 0;}
+
+  .stars-static{color:var(--brand); font-size:0.9rem; letter-spacing:1px;}
+
+  .resolve-form{margin-top:0.6rem; padding-top:0.6rem; border-top:1px dashed var(--border);}
+  .resolve-form .btn-row{display:flex; gap:0.5rem; margin-top:0.6rem;}
+
+  select.filter-select{max-width:220px; margin-bottom:0.9rem;}
+</style>
+</head>
+<body>
+
+<header>
+  <a href="/admin" class="brand"><span class="brand-mark"></span><h1>Ledger — Admin</h1></a>
+  <div id="adminBadge"></div>
+</header>
+
+<!-- ===== AUTH ===== -->
+<div id="authWrap" class="auth-wrap hidden">
+  <div class="panel">
+    <h2 id="authTitle">Admin sign-in</h2>
+
+    <div id="loginForm">
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" placeholder="admin@example.com">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="loginExisting()">Sign in</button>
+    </div>
+
+    <div id="setupForm" class="hidden">
+      <p style="font-size:0.85rem; color:var(--muted); margin:0 0 0.5rem;">No admin account exists yet. Create the first one — this only works once.</p>
+      <div class="field">
+        <label for="setupEmail">Email</label>
+        <input id="setupEmail" type="email" placeholder="admin@example.com">
+      </div>
+      <div class="field">
+        <label for="setupPassword">Password (min. 8 characters)</label>
+        <input id="setupPassword" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="bootstrapAdmin()">Create admin account</button>
+    </div>
+
+    <div id="authMsg"></div>
+  </div>
+</div>
+
+<!-- ===== DASHBOARD ===== -->
+<main id="dashWrap" class="hidden">
+
+  <div class="tabbar">
+    <button class="tabbtn active" data-tab="overview" onclick="switchTab('overview')">Overview</button>
+    <button class="tabbtn" data-tab="users" onclick="switchTab('users')">Users</button>
+    <button class="tabbtn" data-tab="merchants" onclick="switchTab('merchants')">Merchants</button>
+    <button class="tabbtn" data-tab="transactions" onclick="switchTab('transactions')">Transactions</button>
+    <button class="tabbtn" data-tab="disputes" onclick="switchTab('disputes')">Disputes</button>
+    <button class="tabbtn" data-tab="tickets" onclick="switchTab('tickets')">Tickets</button>
+    <button class="tabbtn" data-tab="feedback" onclick="switchTab('feedback')">Feedback</button>
+  </div>
+
+  <div id="tab-overview" class="tab-content">
+    <div class="stat-row" id="overviewStats"></div>
+  </div>
+
+  <div id="tab-users" class="tab-content hidden">
+    <div class="panel"><h2>Users</h2><div id="usersList"></div></div>
+  </div>
+
+  <div id="tab-merchants" class="tab-content hidden">
+    <div class="panel"><h2>Merchants</h2><div id="merchantsList"></div></div>
+  </div>
+
+  <div id="tab-transactions" class="tab-content hidden">
+    <div class="panel">
+      <h2>Transactions</h2>
+      <select id="txnStatusFilter" class="filter-select" onchange="loadTransactions()">
+        <option value="">All statuses</option>
+        <option value="settled">Settled</option>
+        <option value="rejected_purpose_mismatch">Rejected — purpose mismatch</option>
+        <option value="rejected_insufficient_funds">Rejected — insufficient funds</option>
+        <option value="disputed">Disputed</option>
+        <option value="failed_pending">Failed — pending</option>
+        <option value="failed_reversed">Failed — reversed</option>
+      </select>
+      <div id="transactionsList"></div>
+    </div>
+  </div>
+
+  <div id="tab-disputes" class="tab-content hidden">
+    <div class="panel"><h2>Disputes</h2><div id="disputesList"></div></div>
+  </div>
+
+  <div id="tab-tickets" class="tab-content hidden">
+    <div class="panel"><h2>Support tickets</h2><div id="ticketsList"></div></div>
+  </div>
+
+  <div id="tab-feedback" class="tab-content hidden">
+    <div class="panel"><h2>Team feedback</h2><div id="feedbackList"></div></div>
+  </div>
+
+  <button class="btn btn-secondary btn-block" onclick="logout()" style="max-width:420px;">Sign out</button>
+</main>
+
+<script>
+const API = "";
+let state = { admin: null, loadedTabs: {} };
+
+function $(id){ return document.getElementById(id); }
+function esc(s){ return (s ?? "").toString().replace(/[&<>"']/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c])); }
+function short(id){ return id ? id.slice(0,8) + "…" : ""; }
+
+async function api(path, method="GET", body=null){
+  const opts = { method, headers: {"Content-Type":"application/json"}, credentials: "same-origin" };
+  if(body) opts.body = JSON.stringify(body);
+  const res = await fetch(API + path, opts);
+  const data = await res.json().catch(()=>({}));
+  if(!res.ok){
+    const err = new Error(data.detail || "Request failed");
+    err.detail = data.detail;
+    throw err;
+  }
+  return data;
+}
+
+function showMsg(el, text, type){ el.innerHTML = `<div class="msg ${type}">${esc(text)}</div>`; }
+
+// ---------- boot ----------
+window.addEventListener("DOMContentLoaded", async () => {
+  try{
+    const admin = await api("/auth/admin-me");
+    state.admin = admin;
+    enterDashboard();
+  }catch(e){
+    $("authWrap").classList.remove("hidden");
+    try{
+      const { exists } = await api("/auth/admin-exists");
+      if(!exists){
+        $("authTitle").textContent = "Set up admin account";
+        $("loginForm").classList.add("hidden");
+        $("setupForm").classList.remove("hidden");
+      }
+    }catch(e2){ /* default to login form on failure */ }
+  }
+});
+
+async function loginExisting(){
+  const email = $("loginEmail").value.trim();
+  const password = $("loginPassword").value;
+  if(!email || !password){ showMsg($("authMsg"), "Enter your email and password.", "error"); return; }
+  try{
+    const admin = await api("/auth/admin-login", "POST", {email, password});
+    state.admin = admin;
+    enterDashboard();
+  }catch(e){
+    showMsg($("authMsg"), e.detail || "Incorrect email or password.", "error");
+  }
+}
+
+async function bootstrapAdmin(){
+  const email = $("setupEmail").value.trim();
+  const password = $("setupPassword").value;
+  if(!email || !password){ showMsg($("authMsg"), "Enter an email and password.", "error"); return; }
+  try{
+    await api("/auth/admin-bootstrap", "POST", {email, password});
+    const admin = await api("/auth/admin-login", "POST", {email, password});
+    state.admin = admin;
+    enterDashboard();
+  }catch(e){
+    showMsg($("authMsg"), e.detail || "Could not create the admin account.", "error");
+  }
+}
+
+async function logout(){
+  try{ await api("/auth/admin-logout", "POST"); }catch(e){ /* clearing local state regardless */ }
+  state = { admin:null, loadedTabs:{} };
+  $("dashWrap").classList.add("hidden");
+  $("adminBadge").textContent = "";
+  $("authWrap").classList.remove("hidden");
+}
+
+function enterDashboard(){
+  $("authWrap").classList.add("hidden");
+  $("dashWrap").classList.remove("hidden");
+  $("adminBadge").textContent = state.admin.email;
+  switchTab("overview");
+}
+
+// ---------- tabs ----------
+function switchTab(tab){
+  document.querySelectorAll(".tabbtn").forEach(b => b.classList.toggle("active", b.dataset.tab === tab));
+  document.querySelectorAll(".tab-content").forEach(c => c.classList.add("hidden"));
+  $(`tab-${tab}`).classList.remove("hidden");
+  if(!state.loadedTabs[tab]){
+    state.loadedTabs[tab] = true;
+    loadTab(tab);
+  }
+}
+
+function loadTab(tab){
+  if(tab === "overview") return loadOverview();
+  if(tab === "users") return loadUsers();
+  if(tab === "merchants") return loadMerchants();
+  if(tab === "transactions") return loadTransactions();
+  if(tab === "disputes") return loadDisputes();
+  if(tab === "tickets") return loadTickets();
+  if(tab === "feedback") return loadFeedback();
+}
+
+// ---------- overview ----------
+async function loadOverview(){
+  const el = $("overviewStats");
+  el.innerHTML = `<p class="empty-note">Loading…</p>`;
+  try{
+    const [recon, fb] = await Promise.all([ api("/admin/reconcile"), api("/admin/feedback/summary") ]);
+    el.innerHTML = `
+      <div class="stat-card ${recon.reconciled ? 'ok' : 'bad'}">
+        <div class="label">Ledger reconciliation</div>
+        <div class="value">${recon.reconciled ? "Balanced" : "Mismatch"}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Ledger entries</div>
+        <div class="value">${recon.entry_count.toLocaleString()}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Net balance</div>
+        <div class="value">${recon.net_balance}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Feedback submissions</div>
+        <div class="value">${fb.count}</div>
+      </div>
+      <div class="stat-card">
+        <div class="label">Average rating</div>
+        <div class="value">${fb.average_rating ?? "—"}</div>
+      </div>
+      <div class="stat-card ${fb.bug_reports > 0 ? 'bad' : ''}">
+        <div class="label">Bug reports</div>
+        <div class="value">${fb.bug_reports}</div>
+      </div>
+    `;
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load overview.</p>`; }
+}
+
+// ---------- users ----------
+async function loadUsers(){
+  const el = $("usersList");
+  try{
+    const users = await api("/admin/users");
+    if(users.length === 0){ el.innerHTML = `<p class="empty-note">No users yet.</p>`; return; }
+    el.innerHTML = users.map(u => `
+      <div class="row">
+        <div class="row-main">
+          <div class="row-title">${esc(u.full_name)}</div>
+          <div class="row-sub">${esc(u.email)} &middot; KYC: ${u.kyc_status} ${u.is_suspended ? '&middot; suspended' : ''}</div>
+        </div>
+        <div class="row-actions">
+          ${u.is_suspended
+            ? `<span class="chip chip-suspended">suspended</span>`
+            : `<button class="btn btn-danger btn-sm" onclick="suspendUser('${u.id}')">Suspend</button>`}
+        </div>
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load users.</p>`; }
+}
+
+async function suspendUser(id){
+  if(!confirm("Suspend this user?")) return;
+  try{ await api(`/admin/users/${id}/suspend`, "POST"); await loadUsers(); }
+  catch(e){ alert(e.detail || "Could not suspend user."); }
+}
+
+// ---------- merchants ----------
+async function loadMerchants(){
+  const el = $("merchantsList");
+  try{
+    const merchants = await api("/merchants?approved_only=false");
+    if(merchants.length === 0){ el.innerHTML = `<p class="empty-note">No merchants yet.</p>`; return; }
+    el.innerHTML = merchants.map(m => `
+      <div class="row">
+        <div class="row-main">
+          <div class="row-title">${esc(m.business_name)}</div>
+          <div class="row-sub">${esc(m.email || "")} &middot; ${m.category.replace('_',' ')}</div>
+        </div>
+        <div class="row-actions">
+          <span class="chip chip-${m.is_suspended ? 'suspended' : m.status}">${m.is_suspended ? 'suspended' : m.status}</span>
+          ${m.status !== "approved" ? `<button class="btn btn-secondary btn-sm" onclick="verifyMerchant('${m.id}', true)">Approve</button>` : ``}
+          ${m.status !== "rejected" ? `<button class="btn btn-secondary btn-sm" onclick="verifyMerchant('${m.id}', false)">Reject</button>` : ``}
+          ${!m.is_suspended ? `<button class="btn btn-danger btn-sm" onclick="suspendMerchant('${m.id}')">Suspend</button>` : ``}
+        </div>
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load merchants.</p>`; }
+}
+
+async function verifyMerchant(id, approve){
+  try{ await api(`/admin/merchants/${id}/verify?approve=${approve}`, "POST"); await loadMerchants(); }
+  catch(e){ alert(e.detail || "Could not update merchant."); }
+}
+async function suspendMerchant(id){
+  if(!confirm("Suspend this merchant?")) return;
+  try{ await api(`/admin/merchants/${id}/suspend`, "POST"); await loadMerchants(); }
+  catch(e){ alert(e.detail || "Could not suspend merchant."); }
+}
+
+// ---------- transactions ----------
+async function loadTransactions(){
+  const el = $("transactionsList");
+  const status = $("txnStatusFilter").value;
+  el.innerHTML = `<p class="empty-note">Loading…</p>`;
+  try{
+    const url = status ? `/admin/transactions?status=${status}` : `/admin/transactions`;
+    const txns = await api(url);
+    if(txns.length === 0){ el.innerHTML = `<p class="empty-note">No transactions.</p>`; return; }
+    el.innerHTML = txns.map(t => `
+      <div class="row">
+        <div class="row-main">
+          <div class="row-title">${t.amount.toLocaleString()} SIM</div>
+          <div class="row-sub">wallet ${short(t.wallet_id)} &rarr; merchant ${short(t.merchant_id)} &middot; ${new Date(t.created_at).toLocaleString()}</div>
+        </div>
+        <span class="chip chip-${t.status.split('_')[0]}">${t.status.replace(/_/g,' ')}</span>
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load transactions.</p>`; }
+}
+
+// ---------- disputes ----------
+async function loadDisputes(){
+  const el = $("disputesList");
+  try{
+    const disputes = await api("/admin/disputes");
+    if(disputes.length === 0){ el.innerHTML = `<p class="empty-note">No disputes.</p>`; return; }
+    el.innerHTML = disputes.map(d => `
+      <div class="row" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="row-main">
+            <div class="row-title">Transaction ${short(d.txn_id)}</div>
+            <div class="row-sub">raised by ${d.raised_by} &middot; ${esc(d.reason)}</div>
+          </div>
+          <span class="chip chip-${d.status}">${d.status.replace(/_/g,' ')}</span>
+        </div>
+        ${(d.status === "open" || d.status === "investigating") ? `
+          <div class="resolve-form">
+            <div class="field">
+              <label for="note-${d.id}">Resolution note</label>
+              <textarea id="note-${d.id}" placeholder="What was decided and why"></textarea>
+            </div>
+            <div class="btn-row">
+              <button class="btn btn-secondary btn-sm" onclick="resolveDispute('${d.id}', false)">Reject dispute</button>
+              <button class="btn btn-danger btn-sm" onclick="resolveDispute('${d.id}', true)">Uphold &amp; refund user</button>
+            </div>
+          </div>
+        ` : d.resolution_note ? `<div class="row-sub" style="margin-top:0.4rem;">Resolution: ${esc(d.resolution_note)}</div>` : ``}
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load disputes.</p>`; }
+}
+
+async function resolveDispute(id, uphold){
+  const note = $(`note-${id}`).value.trim();
+  if(!note){ alert("Add a resolution note first."); return; }
+  try{ await api(`/admin/disputes/${id}/resolve`, "POST", {uphold, resolution_note: note}); await loadDisputes(); }
+  catch(e){ alert(e.detail || "Could not resolve dispute."); }
+}
+
+// ---------- tickets ----------
+async function loadTickets(){
+  const el = $("ticketsList");
+  try{
+    const tickets = await api("/support/tickets");
+    if(tickets.length === 0){ el.innerHTML = `<p class="empty-note">No support tickets.</p>`; return; }
+    el.innerHTML = tickets.map(t => `
+      <div class="row" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="row-main">
+            <div class="row-title">${esc(t.subject)}</div>
+            <div class="row-sub">${t.raised_by_type} ${short(t.raised_by_id)} &middot; ${esc(t.description)}</div>
+          </div>
+          <span class="chip chip-${t.status}">${t.status}</span>
+        </div>
+        ${(t.status === "open" || t.status === "investigating") ? `
+          <div class="resolve-form">
+            ${t.status === "open" ? `<button class="btn btn-secondary btn-sm" onclick="investigateTicket('${t.id}')">Mark investigating</button>` : ``}
+            <div class="field">
+              <label for="tnote-${t.id}">Resolution note</label>
+              <textarea id="tnote-${t.id}" placeholder="How this was resolved"></textarea>
+            </div>
+            <button class="btn btn-primary btn-sm" onclick="resolveTicket('${t.id}')">Mark resolved</button>
+          </div>
+        ` : t.resolution_note ? `<div class="row-sub" style="margin-top:0.4rem;">Resolution: ${esc(t.resolution_note)}</div>` : ``}
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load tickets.</p>`; }
+}
+
+async function investigateTicket(id){
+  try{ await api(`/support/tickets/${id}/investigate`, "POST"); await loadTickets(); }
+  catch(e){ alert(e.detail || "Could not update ticket."); }
+}
+async function resolveTicket(id){
+  const note = $(`tnote-${id}`).value.trim();
+  if(!note){ alert("Add a resolution note first."); return; }
+  try{ await api(`/support/tickets/${id}/resolve`, "POST", {resolution_note: note}); await loadTickets(); }
+  catch(e){ alert(e.detail || "Could not resolve ticket."); }
+}
+
+// ---------- feedback ----------
+async function loadFeedback(){
+  const el = $("feedbackList");
+  try{
+    const items = await api("/admin/feedback");
+    if(items.length === 0){ el.innerHTML = `<p class="empty-note">No feedback yet.</p>`; return; }
+    el.innerHTML = items.map(f => `
+      <div class="row" style="flex-direction:column; align-items:stretch;">
+        <div style="display:flex; justify-content:space-between; align-items:center;">
+          <div class="row-main">
+            <div class="row-title">${esc(f.name || "Anonymous")} ${f.role ? `&middot; ${f.role.replace('_',' ')}` : ''}</div>
+            <div class="row-sub">${new Date(f.created_at).toLocaleString()}</div>
+          </div>
+          <div class="stars-static">${"★".repeat(f.rating)}${"☆".repeat(5-f.rating)}</div>
+        </div>
+        ${f.liked ? `<div class="row-sub" style="margin-top:0.4rem;"><strong>Worked well:</strong> ${esc(f.liked)}</div>` : ``}
+        ${f.improve ? `<div class="row-sub" style="margin-top:0.2rem;"><strong>Should improve:</strong> ${esc(f.improve)}</div>` : ``}
+        ${f.bug_report ? `<span class="chip chip-rejected" style="margin-top:0.4rem; width:fit-content;">bug reported</span>` : ``}
+      </div>
+    `).join("");
+  }catch(e){ el.innerHTML = `<p class="empty-note">Could not load feedback.</p>`; }
+}
+</script>
+
+</body>
+</html>
