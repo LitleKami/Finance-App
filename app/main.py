@@ -44,6 +44,11 @@ def feedback_page():
     return FileResponse("app/static/feedback.html")
 
 
+@app.get("/admin", tags=["Root"], include_in_schema=False)
+def admin_page():
+    return FileResponse("app/static/admin.html")
+
+
 @app.get("/status", tags=["Root"])
 def status():
     return {
