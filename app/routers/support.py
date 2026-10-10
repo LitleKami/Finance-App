@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.deps import get_current_admin
 from app.models import TicketStatus
 
 router = APIRouter(prefix="/support", tags=["Support"])
@@ -10,6 +11,7 @@ router = APIRouter(prefix="/support", tags=["Support"])
 
 @router.post("/tickets", response_model=schemas.TicketOut)
 def create_ticket(payload: schemas.TicketCreate, db: Session = Depends(get_db)):
+    """Open to anyone — a user or merchant filing an issue shouldn't need admin credentials."""
     ticket = models.SupportTicket(**payload.dict())
     db.add(ticket)
     db.commit()
@@ -18,7 +20,8 @@ def create_ticket(payload: schemas.TicketCreate, db: Session = Depends(get_db)):
 
 
 @router.get("/tickets", response_model=list[schemas.TicketOut])
-def list_tickets(status: TicketStatus = None, db: Session = Depends(get_db)):
+def list_tickets(status: TicketStatus = None, db: Session = Depends(get_db),
+                  current_admin: models.Admin = Depends(get_current_admin)):
     q = db.query(models.SupportTicket)
     if status:
         q = q.filter(models.SupportTicket.status == status)
@@ -26,7 +29,8 @@ def list_tickets(status: TicketStatus = None, db: Session = Depends(get_db)):
 
 
 @router.post("/tickets/{ticket_id}/investigate", response_model=schemas.TicketOut)
-def investigate_ticket(ticket_id: str, db: Session = Depends(get_db)):
+def investigate_ticket(ticket_id: str, db: Session = Depends(get_db),
+                        current_admin: models.Admin = Depends(get_current_admin)):
     ticket = db.query(models.SupportTicket).get(ticket_id)
     if not ticket:
         raise HTTPException(404, "Ticket not found")
@@ -37,7 +41,8 @@ def investigate_ticket(ticket_id: str, db: Session = Depends(get_db)):
 
 
 @router.post("/tickets/{ticket_id}/resolve", response_model=schemas.TicketOut)
-def resolve_ticket(ticket_id: str, payload: schemas.TicketResolve, db: Session = Depends(get_db)):
+def resolve_ticket(ticket_id: str, payload: schemas.TicketResolve, db: Session = Depends(get_db),
+                    current_admin: models.Admin = Depends(get_current_admin)):
     ticket = db.query(models.SupportTicket).get(ticket_id)
     if not ticket:
         raise HTTPException(404, "Ticket not found")
