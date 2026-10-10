@@ -14,6 +14,7 @@ from app.database import get_db
 
 USER_COOKIE = "user_session"
 MERCHANT_COOKIE = "merchant_session"
+ADMIN_COOKIE = "admin_session"
 
 
 def _resolve_session(db: DBSession, token: str, subject_type: str):
@@ -51,3 +52,13 @@ def get_current_merchant(request: Request, db: DBSession = Depends(get_db)) -> m
     if not merchant or merchant.is_suspended:
         raise HTTPException(401, "Not logged in")
     return merchant
+
+
+def get_current_admin(request: Request, db: DBSession = Depends(get_db)) -> models.Admin:
+    sess = _resolve_session(db, request.cookies.get(ADMIN_COOKIE), "admin")
+    if not sess:
+        raise HTTPException(401, "Not logged in")
+    admin = db.query(models.Admin).get(sess.subject_id)
+    if not admin:
+        raise HTTPException(401, "Not logged in")
+    return admin
