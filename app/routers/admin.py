@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 
 from app import models, schemas
 from app.database import get_db
+from app.deps import get_current_admin
 from app.ledger import system_wide_reconciliation, post_entry, get_balance
 from app.models import EntryType, TxnStatus, DisputeStatus
 
@@ -11,7 +12,8 @@ router = APIRouter(prefix="/admin", tags=["Admin"])
 
 # ---- Merchant approval ----
 @router.post("/merchants/{merchant_id}/verify", response_model=schemas.MerchantOut)
-def verify_merchant(merchant_id: str, approve: bool = True, db: Session = Depends(get_db)):
+def verify_merchant(merchant_id: str, approve: bool = True, db: Session = Depends(get_db),
+                     current_admin: models.Admin = Depends(get_current_admin)):
     merchant = db.query(models.Merchant).get(merchant_id)
     if not merchant:
         raise HTTPException(404, "Merchant not found")
@@ -22,7 +24,8 @@ def verify_merchant(merchant_id: str, approve: bool = True, db: Session = Depend
 
 
 @router.post("/merchants/{merchant_id}/suspend", response_model=schemas.MerchantOut)
-def suspend_merchant(merchant_id: str, db: Session = Depends(get_db)):
+def suspend_merchant(merchant_id: str, db: Session = Depends(get_db),
+                      current_admin: models.Admin = Depends(get_current_admin)):
     merchant = db.query(models.Merchant).get(merchant_id)
     if not merchant:
         raise HTTPException(404, "Merchant not found")
@@ -34,12 +37,14 @@ def suspend_merchant(merchant_id: str, db: Session = Depends(get_db)):
 
 # ---- User management ----
 @router.get("/users", response_model=list[schemas.UserOut])
-def list_users(db: Session = Depends(get_db)):
+def list_users(db: Session = Depends(get_db),
+                current_admin: models.Admin = Depends(get_current_admin)):
     return db.query(models.User).all()
 
 
 @router.post("/users/{user_id}/suspend", response_model=schemas.UserOut)
-def suspend_user(user_id: str, db: Session = Depends(get_db)):
+def suspend_user(user_id: str, db: Session = Depends(get_db),
+                  current_admin: models.Admin = Depends(get_current_admin)):
     user = db.query(models.User).get(user_id)
     if not user:
         raise HTTPException(404, "User not found")
@@ -51,7 +56,8 @@ def suspend_user(user_id: str, db: Session = Depends(get_db)):
 
 # ---- Transaction monitoring ----
 @router.get("/transactions", response_model=list[schemas.TransactionOut])
-def list_transactions(status: TxnStatus = None, db: Session = Depends(get_db)):
+def list_transactions(status: TxnStatus = None, db: Session = Depends(get_db),
+                       current_admin: models.Admin = Depends(get_current_admin)):
     q = db.query(models.Transaction)
     if status:
         q = q.filter(models.Transaction.status == status)
@@ -60,7 +66,8 @@ def list_transactions(status: TxnStatus = None, db: Session = Depends(get_db)):
 
 # ---- Financial monitoring / reconciliation ----
 @router.get("/reconcile")
-def reconcile(db: Session = Depends(get_db)):
+def reconcile(db: Session = Depends(get_db),
+              current_admin: models.Admin = Depends(get_current_admin)):
     """
     The single most important admin endpoint in a ledger-based system:
     proves total system-wide debits equal total credits. If this ever
@@ -72,12 +79,14 @@ def reconcile(db: Session = Depends(get_db)):
 
 # ---- Disputes ----
 @router.get("/disputes", response_model=list[schemas.DisputeOut])
-def list_disputes(db: Session = Depends(get_db)):
+def list_disputes(db: Session = Depends(get_db),
+                   current_admin: models.Admin = Depends(get_current_admin)):
     return db.query(models.Dispute).all()
 
 
 @router.post("/disputes", response_model=schemas.DisputeOut)
-def create_dispute(payload: schemas.DisputeCreate, db: Session = Depends(get_db)):
+def create_dispute(payload: schemas.DisputeCreate, db: Session = Depends(get_db),
+                    current_admin: models.Admin = Depends(get_current_admin)):
     txn = db.query(models.Transaction).get(payload.txn_id)
     if not txn:
         raise HTTPException(404, "Transaction not found")
@@ -94,7 +103,8 @@ def create_dispute(payload: schemas.DisputeCreate, db: Session = Depends(get_db)
 
 
 @router.post("/disputes/{dispute_id}/resolve", response_model=schemas.DisputeOut)
-def resolve_dispute(dispute_id: str, payload: schemas.DisputeResolve, db: Session = Depends(get_db)):
+def resolve_dispute(dispute_id: str, payload: schemas.DisputeResolve, db: Session = Depends(get_db),
+                     current_admin: models.Admin = Depends(get_current_admin)):
     """
     Resolving a dispute in the user's favor after settlement means clawing
     money back from the merchant — this is exactly the settlement/dispute
@@ -126,12 +136,14 @@ def resolve_dispute(dispute_id: str, payload: schemas.DisputeResolve, db: Sessio
 
 # ---- Team feedback ----
 @router.get("/feedback", response_model=list[schemas.FeedbackOut])
-def list_feedback(db: Session = Depends(get_db)):
+def list_feedback(db: Session = Depends(get_db),
+                   current_admin: models.Admin = Depends(get_current_admin)):
     return db.query(models.Feedback).order_by(models.Feedback.created_at.desc()).all()
 
 
 @router.get("/feedback/summary")
-def feedback_summary(db: Session = Depends(get_db)):
+def feedback_summary(db: Session = Depends(get_db),
+                      current_admin: models.Admin = Depends(get_current_admin)):
     items = db.query(models.Feedback).all()
     if not items:
         return {"count": 0, "average_rating": None, "bug_reports": 0}
