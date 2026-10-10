@@ -3,181 +3,130 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Ledger &mdash; Purpose Wallet</title>
+<title>Ledger</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,600;9..144,700&family=Inter:wght@400;500;600&family=IBM+Plex+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@600;700&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
 <style>
   :root{
-    --ink:#1B2420;
-    --ink-2:#212C26;
-    --ink-3:#2A362F;
-    --paper:#EFE7D8;
-    --paper-2:#E6DCC6;
-    --moss:#5C7A5E;
-    --moss-dark:#3E5940;
-    --oxblood:#8B3A3A;
-    --gold:#C9A227;
-    --inkblue:#2C4A52;
-    --text-on-paper:#2A241C;
-    --text-on-ink:#EFE7D8;
-    --text-muted:#9BA89C;
+    --ink:#10192B;
+    --bg:#F6F7F9;
+    --surface:#FFFFFF;
+    --border:#E3E6EA;
+    --muted:#5B6472;
+    --brand:#0B6E4F;
+    --brand-dark:#09593F;
+    --brand-tint:#E6F2ED;
+    --danger:#B3261E;
+    --danger-tint:#FBEAE9;
+    --warn:#C78A1E;
+    --warn-tint:#FBF1DE;
   }
   *{box-sizing:border-box;}
-  html,body{margin:0;padding:0;}
+  html,body{margin:0; padding:0;}
   body{
-    background:var(--ink);
-    color:var(--text-on-ink);
-    font-family:'Inter',sans-serif;
-    min-height:100vh;
-    padding-bottom:4rem;
+    background:var(--bg); color:var(--ink);
+    font-family:'Inter',sans-serif; min-height:100vh; padding-bottom:3rem;
   }
-  h1,h2,h3{font-family:'Fraunces',serif;font-weight:600;margin:0;}
-  .mono{font-family:'IBM Plex Mono',monospace;}
+  h1,h2{font-family:'Space Grotesk',sans-serif; margin:0;}
   a{color:inherit;}
-
-  /* ---------- header ---------- */
-  header{
-    padding:1.5rem 1.25rem 1rem;
-    border-bottom:1px solid var(--ink-3);
-    display:flex; align-items:baseline; justify-content:space-between;
-  }
-  header h1{font-size:1.5rem; letter-spacing:0.01em;}
-  header h1 span{color:var(--gold);}
-  #accountBadge{font-size:0.75rem; color:var(--text-muted); font-family:'IBM Plex Mono',monospace;}
-
-  main{max-width:640px; margin:0 auto; padding:1.25rem;}
   .hidden{display:none !important;}
 
-  /* ---------- generic panel ---------- */
+  header{
+    background:var(--surface); border-bottom:1px solid var(--border);
+    padding:1.1rem 1.25rem; display:flex; align-items:center; justify-content:space-between;
+  }
+  .brand{display:flex; align-items:center; gap:0.55rem; text-decoration:none;}
+  .brand-mark{width:11px; height:11px; border-radius:3px; background:var(--brand); display:inline-block;}
+  header h1{font-weight:700; font-size:1.25rem;}
+  #accountBadge{font-size:0.82rem; color:var(--muted); font-weight:500;}
+
+  main{max-width:480px; margin:0 auto; padding:1.25rem;}
+
   .panel{
-    background:var(--ink-2);
-    border:1px solid var(--ink-3);
-    border-radius:6px;
-    padding:1.25rem;
-    margin-bottom:1.25rem;
+    background:var(--surface); border:1px solid var(--border); border-radius:10px;
+    padding:1.25rem; margin-bottom:1rem;
   }
-  .panel h2{font-size:1.1rem; margin-bottom:0.75rem;}
-  label{display:block; font-size:0.8rem; color:var(--text-muted); margin:0.75rem 0 0.3rem;}
+  .panel h2{font-size:1.05rem; font-weight:600; margin-bottom:0.8rem;}
+
+  .field{margin-top:0.9rem;}
+  .field label{display:block; font-size:0.8rem; color:var(--muted); font-weight:500; margin-bottom:0.3rem;}
   input, select{
-    width:100%; padding:0.65rem 0.7rem; border-radius:4px;
-    border:1px solid var(--ink-3); background:var(--ink);
-    color:var(--text-on-ink); font-family:'Inter',sans-serif; font-size:0.95rem;
+    width:100%; padding:0.65rem 0.75rem; border-radius:8px; border:1px solid var(--border);
+    background:var(--surface); color:var(--ink); font-family:'Inter'; font-size:0.95rem;
   }
-  input:focus, select:focus, button:focus{outline:2px solid var(--gold); outline-offset:1px;}
+  input:focus, select:focus{ outline:none; border-color:var(--brand); box-shadow:0 0 0 3px var(--brand-tint); }
 
-  button{
-    font-family:'Inter',sans-serif; font-weight:600; font-size:0.9rem;
-    padding:0.7rem 1rem; border-radius:4px; border:none; cursor:pointer;
-    margin-top:0.9rem;
+  .btn{
+    display:inline-flex; align-items:center; justify-content:center; font-family:'Inter';
+    font-weight:600; font-size:0.9rem; padding:0.7rem 1rem; border-radius:8px; border:none;
+    cursor:pointer;
   }
-  .btn-primary{background:var(--moss); color:#fff;}
-  .btn-primary:hover{background:var(--moss-dark);}
-  .btn-secondary{background:transparent; color:var(--text-on-ink); border:1px solid var(--ink-3);}
-  .btn-secondary:hover{border-color:var(--gold);}
-  .btn-danger{background:var(--oxblood); color:#fff;}
-  .btn-block{width:100%;}
-  .btn-row{display:flex; gap:0.6rem;}
-  .btn-row button{flex:1;}
+  .btn-primary{background:var(--brand); color:#fff;}
+  .btn-primary:hover{background:var(--brand-dark);}
+  .btn-secondary{background:var(--surface); color:var(--ink); border:1px solid var(--border);}
+  .btn-secondary:hover{border-color:var(--ink);}
+  .btn-block{width:100%; margin-top:1rem;}
+  .btn-row{display:flex; gap:0.6rem; margin-top:0.9rem;}
+  .btn-row .btn{flex:1; margin-top:0;}
 
-  .tabbar{display:flex; gap:0.4rem; margin-bottom:1rem;}
-  .tabbar button{
-    flex:1; margin-top:0; background:var(--ink); color:var(--text-muted);
-    border:1px solid var(--ink-3);
-  }
-  .tabbar button.active{background:var(--ink-3); color:var(--text-on-ink); border-color:var(--gold);}
+  .tabs{display:flex; background:var(--bg); border:1px solid var(--border); border-radius:9px; padding:3px; margin-bottom:1rem;}
+  .tab{flex:1; text-align:center; padding:0.55rem; border-radius:7px; font-size:0.85rem; font-weight:500;
+       color:var(--muted); background:transparent; border:none; font-family:'Inter'; cursor:pointer;}
+  .tab.active{background:var(--surface); color:var(--ink); box-shadow:0 1px 3px rgba(16,25,43,0.08);}
 
-  .msg{font-size:0.85rem; margin-top:0.6rem; padding:0.5rem 0.7rem; border-radius:4px;}
-  .msg.error{background:rgba(139,58,58,0.25); color:#E8AFAF; border:1px solid var(--oxblood);}
-  .msg.ok{background:rgba(92,122,94,0.25); color:#B9D3BA; border:1px solid var(--moss);}
+  .msg{font-size:0.85rem; padding:0.55rem 0.75rem; border-radius:8px; margin-top:0.7rem;}
+  .msg.error{background:var(--danger-tint); color:var(--danger); border:1px solid rgba(179,38,30,0.2);}
+  .msg.ok{background:var(--brand-tint); color:var(--brand); border:1px solid rgba(11,110,79,0.2);}
 
-  /* ---------- envelope card (signature element) ---------- */
-  .envelope{
-    position:relative;
-    background:var(--paper);
-    color:var(--text-on-paper);
-    border-radius:2px;
-    margin-bottom:1.1rem;
-    padding:1.4rem 1.1rem 1.1rem;
-    box-shadow:0 6px 14px rgba(0,0,0,0.35);
+  .wallet-card{
+    background:var(--surface); border:1px solid var(--border); border-radius:12px;
+    padding:1.1rem; margin-bottom:0.9rem;
   }
-  .envelope::before{
-    /* torn flap edge */
-    content:"";
-    position:absolute; top:-1px; left:0; right:0; height:14px;
-    background:var(--ink);
-    clip-path:polygon(
-      0% 100%, 4% 20%, 8% 90%, 12% 10%, 16% 85%, 20% 15%, 24% 95%, 28% 5%,
-      32% 80%, 36% 20%, 40% 100%, 44% 10%, 48% 90%, 52% 15%, 56% 95%, 60% 5%,
-      64% 85%, 68% 20%, 72% 100%, 76% 10%, 80% 90%, 84% 15%, 88% 95%, 92% 10%,
-      96% 85%, 100% 100%
-    );
-  }
-  .envelope-top{display:flex; justify-content:space-between; align-items:flex-start; gap:0.6rem;}
-  .envelope-category{
-    font-family:'Fraunces',serif; font-weight:600; font-size:1.15rem;
-    text-transform:capitalize;
-  }
-  .envelope-freq{font-size:0.7rem; color:#6B6252; text-transform:uppercase; letter-spacing:0.05em;}
-  .seal{
-    width:38px; height:38px; border-radius:50%;
-    background:var(--oxblood); color:#fff;
-    display:flex; align-items:center; justify-content:center;
-    font-size:1.1rem; flex-shrink:0;
-    box-shadow:inset 0 0 0 2px rgba(255,255,255,0.25);
-  }
-  .envelope-balance{font-family:'IBM Plex Mono',monospace; font-size:1.9rem; font-weight:600; margin-top:0.5rem;}
-  .envelope-balance .unit{font-size:0.9rem; color:#6B6252; font-weight:400; margin-left:0.3rem;}
-  .progress-track{
-    background:var(--paper-2); border-radius:3px; height:7px; margin-top:0.6rem; overflow:hidden;
-  }
-  .progress-fill{background:var(--gold); height:100%; border-radius:3px;}
-  .progress-label{font-size:0.72rem; color:#6B6252; margin-top:0.3rem;}
-  .envelope-actions{display:flex; gap:0.6rem; margin-top:0.9rem;}
-  .envelope-actions button{margin-top:0; flex:1; font-size:0.82rem; padding:0.55rem;}
-  .btn-fund{background:var(--inkblue); color:#fff;}
-  .btn-spend{background:var(--ink); color:var(--paper); border:1px solid var(--text-on-paper);}
+  .wallet-head{display:flex; align-items:center; justify-content:space-between;}
+  .wallet-cat{display:flex; align-items:center; gap:0.5rem; font-weight:600; font-size:0.95rem;}
+  .cat-dot{width:9px; height:9px; border-radius:50%; flex-shrink:0;}
+  .wallet-freq{font-size:0.75rem; color:var(--muted);}
+  .wallet-balance{font-variant-numeric:tabular-nums; font-size:1.8rem; font-weight:700; margin-top:0.5rem;}
+  .wallet-balance .unit{font-size:0.78rem; color:var(--muted); font-weight:500; margin-left:0.3rem;}
+  .progress-track{background:var(--bg); border:1px solid var(--border); border-radius:4px; height:6px; margin-top:0.6rem; overflow:hidden;}
+  .progress-fill{background:var(--brand); height:100%;}
+  .progress-label{font-size:0.72rem; color:var(--muted); margin-top:0.35rem;}
+  .wallet-actions{display:flex; gap:0.6rem; margin-top:0.9rem;}
+  .wallet-actions .btn{flex:1; font-size:0.82rem; padding:0.55rem;}
 
-  /* ---------- ledger / activity ---------- */
-  .ledger-row{
-    display:flex; justify-content:space-between; align-items:center;
-    padding:0.65rem 0; border-bottom:1px solid var(--ink-3); font-size:0.85rem;
-  }
-  .ledger-row:last-child{border-bottom:none;}
-  .ledger-merchant{font-weight:500;}
-  .ledger-amount{font-family:'IBM Plex Mono',monospace;}
-  .stamp{
-    font-family:'IBM Plex Mono',monospace; font-size:0.62rem; font-weight:600;
-    text-transform:uppercase; letter-spacing:0.06em;
-    padding:0.2rem 0.45rem; border-radius:2px; border:1.5px solid currentColor;
-    transform:rotate(-4deg); display:inline-block;
-  }
-  .stamp-settled{color:var(--moss);}
-  .stamp-rejected{color:var(--oxblood);}
-  .stamp-pending{color:var(--gold);}
-  .stamp-disputed{color:#C77F3A;}
+  .activity-row{display:flex; justify-content:space-between; align-items:center; padding:0.65rem 0; border-bottom:1px solid var(--border); font-size:0.88rem;}
+  .activity-row:last-child{border-bottom:none;}
+  .activity-amount{font-variant-numeric:tabular-nums; font-weight:600;}
+  .activity-time{font-size:0.72rem; color:var(--muted); margin-top:0.15rem;}
 
-  /* ---------- modal ---------- */
+  .chip{display:inline-block; font-size:0.72rem; font-weight:600; padding:0.22rem 0.6rem; border-radius:999px;}
+  .chip-settled{background:var(--brand-tint); color:var(--brand);}
+  .chip-rejected{background:var(--danger-tint); color:var(--danger);}
+  .chip-pending{background:var(--warn-tint); color:var(--warn);}
+  .chip-disputed{background:var(--warn-tint); color:#9A5B12;}
+
+  .empty-note{color:var(--muted); font-size:0.85rem; text-align:center; padding:1.2rem 0;}
+  .demo-toggle{display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:var(--muted); margin-top:0.9rem;}
+
   .modal-backdrop{
-    position:fixed; inset:0; background:rgba(0,0,0,0.6);
+    position:fixed; inset:0; background:rgba(16,25,43,0.45);
     display:flex; align-items:center; justify-content:center; padding:1.25rem; z-index:20;
   }
   .modal{
-    background:var(--paper); color:var(--text-on-paper); border-radius:6px;
-    padding:1.4rem; max-width:380px; width:100%;
+    background:var(--surface); border-radius:12px; padding:1.4rem; max-width:380px; width:100%;
+    box-shadow:0 16px 40px rgba(16,25,43,0.2);
   }
-  .modal h3{margin-bottom:0.4rem;}
-  .modal p{font-size:0.85rem; color:#6B6252; margin:0 0 0.8rem;}
-  .modal input{border:1px solid #C9BFA8; background:#fff; color:var(--text-on-paper);}
+  .modal h3{font-family:'Space Grotesk'; font-size:1.05rem; margin:0 0 0.3rem; font-weight:600;}
+  .modal p{font-size:0.85rem; color:var(--muted); margin:0 0 0.8rem;}
 
-  .empty-note{color:var(--text-muted); font-size:0.85rem; text-align:center; padding:1.2rem 0;}
-  .demo-toggle{display:flex; align-items:center; gap:0.5rem; font-size:0.78rem; color:var(--text-muted); margin-top:0.9rem;}
-  footer{text-align:center; color:var(--text-muted); font-size:0.72rem; padding:2rem 1rem 0;}
+  .link-row{display:block; text-align:center; margin-top:1rem; font-size:0.85rem; color:var(--brand); text-decoration:none; font-weight:500;}
+  footer{text-align:center; color:var(--muted); font-size:0.72rem; padding:2rem 1rem 0;}
 </style>
 </head>
 <body>
 
 <header>
-  <a href="/" style="text-decoration:none; color:inherit; display:inline-block;"><h1>Ledger<span>.</span></h1></a>
+  <a href="/" class="brand"><span class="brand-mark"></span><h1>Ledger</h1></a>
   <div id="accountBadge"></div>
 </header>
 
@@ -185,34 +134,46 @@
 
   <!-- ===== AUTH SCREEN ===== -->
   <section id="authScreen" class="panel hidden">
-    <h2>Open your ledger</h2>
-    <div class="tabbar">
-      <button id="tabLogin" class="active" onclick="switchTab('login')">I have an account</button>
-      <button id="tabRegister" onclick="switchTab('register')">Register</button>
+    <h2>Sign in</h2>
+    <div class="tabs">
+      <button id="tabLogin" class="tab active" onclick="switchTab('login')">I have an account</button>
+      <button id="tabRegister" class="tab" onclick="switchTab('register')">Register</button>
     </div>
 
     <div id="loginForm">
-      <label for="loginEmail">Email</label>
-      <input id="loginEmail" type="email" placeholder="you@example.com">
-      <label for="loginPassword">Password</label>
-      <input id="loginPassword" type="password" placeholder="••••••••">
-      <button class="btn-primary btn-block" onclick="loginExisting()">Enter</button>
+      <div class="field">
+        <label for="loginEmail">Email</label>
+        <input id="loginEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="loginPassword">Password</label>
+        <input id="loginPassword" type="password" placeholder="••••••••">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="loginExisting()">Sign in</button>
     </div>
 
     <div id="registerForm" class="hidden">
-      <label for="regName">Full name</label>
-      <input id="regName" placeholder="Ada Eze">
-      <label for="regEmail">Email</label>
-      <input id="regEmail" type="email" placeholder="you@example.com">
-      <label for="regPassword">Password (min. 8 characters)</label>
-      <input id="regPassword" type="password" placeholder="••••••••">
-      <label for="regPin">Choose a 4-digit payment PIN</label>
-      <input id="regPin" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
-      <button class="btn-primary btn-block" onclick="registerNew()">Create account</button>
+      <div class="field">
+        <label for="regName">Full name</label>
+        <input id="regName" placeholder="Ada Eze">
+      </div>
+      <div class="field">
+        <label for="regEmail">Email</label>
+        <input id="regEmail" type="email" placeholder="you@example.com">
+      </div>
+      <div class="field">
+        <label for="regPassword">Password (min. 8 characters)</label>
+        <input id="regPassword" type="password" placeholder="••••••••">
+      </div>
+      <div class="field">
+        <label for="regPin">Choose a 4-digit payment PIN</label>
+        <input id="regPin" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
+      </div>
+      <button class="btn btn-primary btn-block" onclick="registerNew()">Create account</button>
     </div>
 
     <div id="authMsg"></div>
-    <a href="/merchant" style="display:block; text-align:center; margin-top:1rem; color:var(--text-muted); font-size:0.8rem; text-decoration:none;">Are you a merchant? Go to the merchant portal &rarr;</a>
+    <a href="/merchant" class="link-row">Are you a merchant? Go to the merchant portal</a>
   </section>
 
   <!-- ===== DASHBOARD ===== -->
@@ -221,45 +182,51 @@
     <div class="panel">
       <h2>Your envelopes</h2>
       <div id="walletList"></div>
-      <button class="btn-secondary btn-block" onclick="openNewWalletForm()">+ New envelope</button>
+      <button class="btn btn-secondary btn-block" onclick="openNewWalletForm()">Create envelope</button>
 
       <div id="newWalletForm" class="hidden">
-        <label for="newCategory">Purpose</label>
-        <select id="newCategory">
-          <option value="transport">Transport</option>
-          <option value="food">Food</option>
-          <option value="rent">Rent</option>
-          <option value="school_fees">School fees</option>
-          <option value="healthcare">Healthcare</option>
-          <option value="electricity">Electricity</option>
-          <option value="water">Water</option>
-          <option value="fuel">Fuel</option>
-          <option value="groceries">Groceries</option>
-          <option value="other">Other</option>
-        </select>
-        <label for="newTarget">Savings target (optional)</label>
-        <input id="newTarget" type="number" placeholder="e.g. 20000">
-        <label for="newFreq">Contribution frequency</label>
-        <select id="newFreq">
-          <option value="manual">Manual</option>
-          <option value="daily">Daily</option>
-          <option value="weekly">Weekly</option>
-          <option value="monthly">Monthly</option>
-        </select>
+        <div class="field">
+          <label for="newCategory">Purpose</label>
+          <select id="newCategory">
+            <option value="transport">Transport</option>
+            <option value="food">Food</option>
+            <option value="rent">Rent</option>
+            <option value="school_fees">School fees</option>
+            <option value="healthcare">Healthcare</option>
+            <option value="electricity">Electricity</option>
+            <option value="water">Water</option>
+            <option value="fuel">Fuel</option>
+            <option value="groceries">Groceries</option>
+            <option value="other">Other</option>
+          </select>
+        </div>
+        <div class="field">
+          <label for="newTarget">Savings target (optional)</label>
+          <input id="newTarget" type="number" placeholder="e.g. 20000">
+        </div>
+        <div class="field">
+          <label for="newFreq">Contribution frequency</label>
+          <select id="newFreq">
+            <option value="manual">Manual</option>
+            <option value="daily">Daily</option>
+            <option value="weekly">Weekly</option>
+            <option value="monthly">Monthly</option>
+          </select>
+        </div>
         <div class="btn-row">
-          <button class="btn-secondary" onclick="closeNewWalletForm()">Cancel</button>
-          <button class="btn-primary" onclick="createWallet()">Seal envelope</button>
+          <button class="btn btn-secondary" onclick="closeNewWalletForm()">Cancel</button>
+          <button class="btn btn-primary" onclick="createWallet()">Create</button>
         </div>
       </div>
     </div>
 
     <div class="panel">
       <h2>Activity</h2>
-      <div id="activityList"><p class="empty-note">Select "Spend" on an envelope to see its ledger here.</p></div>
+      <div id="activityList"><p class="empty-note">Select "Spend" on an envelope to see its activity here.</p></div>
     </div>
 
-    <button class="btn-secondary btn-block" onclick="logout()">Switch account</button>
-    <a href="/feedback" style="display:block; text-align:center; margin-top:0.9rem; color:var(--gold); font-size:0.85rem; text-decoration:none;">Give feedback on this app &rarr;</a>
+    <button class="btn btn-secondary btn-block" onclick="logout()">Switch account</button>
+    <a href="/feedback" class="link-row">Give feedback on this app</a>
   </section>
 
 </main>
@@ -269,12 +236,14 @@
   <div class="modal">
     <h3>Add money</h3>
     <p>Simulated funding — stands in for a real funding method.</p>
-    <label for="fundAmount">Amount</label>
-    <input id="fundAmount" type="number" placeholder="1000">
+    <div class="field">
+      <label for="fundAmount">Amount</label>
+      <input id="fundAmount" type="number" placeholder="1000">
+    </div>
     <div id="fundMsg"></div>
     <div class="btn-row">
-      <button class="btn-secondary" onclick="closeModal('fundModal')">Cancel</button>
-      <button class="btn-primary" onclick="submitFund()">Add</button>
+      <button class="btn btn-secondary" onclick="closeModal('fundModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitFund()">Add</button>
     </div>
   </div>
 </div>
@@ -284,18 +253,22 @@
   <div class="modal">
     <h3>Spend from this envelope</h3>
     <p id="spendSub"></p>
-    <label for="merchantSelect">Merchant</label>
-    <select id="merchantSelect"></select>
+    <div class="field">
+      <label for="merchantSelect">Merchant</label>
+      <select id="merchantSelect"></select>
+    </div>
     <div class="demo-toggle">
       <input type="checkbox" id="anyCategoryToggle" onchange="loadMerchantsForSpend()">
       <label for="anyCategoryToggle" style="margin:0;">Demo: show merchants outside this category (to see a rejection)</label>
     </div>
-    <label for="spendAmount">Amount</label>
-    <input id="spendAmount" type="number" placeholder="500">
+    <div class="field">
+      <label for="spendAmount">Amount</label>
+      <input id="spendAmount" type="number" placeholder="500">
+    </div>
     <div id="spendMsg"></div>
     <div class="btn-row">
-      <button class="btn-secondary" onclick="closeModal('spendModal')">Cancel</button>
-      <button class="btn-primary" onclick="submitSpend()">Continue</button>
+      <button class="btn btn-secondary" onclick="closeModal('spendModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitSpend()">Continue</button>
     </div>
   </div>
 </div>
@@ -305,12 +278,14 @@
   <div class="modal">
     <h3>Confirm payment</h3>
     <p id="pinSub"></p>
-    <label for="pinInput">PIN</label>
-    <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
+    <div class="field">
+      <label for="pinInput">PIN</label>
+      <input id="pinInput" type="password" inputmode="numeric" maxlength="6" placeholder="1234">
+    </div>
     <div id="pinMsg"></div>
     <div class="btn-row">
-      <button class="btn-secondary" onclick="closeModal('pinModal')">Cancel</button>
-      <button class="btn-primary" onclick="submitConfirm()">Confirm &amp; pay</button>
+      <button class="btn btn-secondary" onclick="closeModal('pinModal')">Cancel</button>
+      <button class="btn btn-primary" onclick="submitConfirm()">Confirm &amp; pay</button>
     </div>
   </div>
 </div>
@@ -322,6 +297,13 @@ const API = ""; // same-origin
 let state = { user: null, wallets: [], activeWalletId: null, pendingTxnId: null };
 
 function $(id){ return document.getElementById(id); }
+
+const CATEGORY_COLORS = {
+  transport: "#3B6EF2", food: "#D98A2B", rent: "#6E56CF", school_fees: "#2BA7A0",
+  healthcare: "#C2447A", electricity: "#D9B91C", water: "#2E9FD9", fuel: "#B5651D",
+  groceries: "#0B6E4F", other: "#8A8F98"
+};
+function categoryColor(cat){ return CATEGORY_COLORS[cat] || "#8A8F98"; }
 
 async function api(path, method="GET", body=null){
   const opts = { method, headers: {"Content-Type":"application/json"}, credentials: "same-origin" };
@@ -338,9 +320,9 @@ async function api(path, method="GET", body=null){
 }
 
 // ---------- boot ----------
-// No more trusting a locally-stored ID: the httpOnly session cookie (set by
-// the server on login) is sent automatically with this request, and /auth/me
-// is the only source of truth for whether we're actually logged in.
+// No locally-stored ID: the httpOnly session cookie (set by the server on
+// login) is sent automatically with this request, and /auth/me is the only
+// source of truth for whether we're actually logged in.
 window.addEventListener("DOMContentLoaded", async () => {
   try{
     const user = await api("/auth/me");
@@ -389,8 +371,6 @@ async function registerNew(){
     const user = await api("/users/register", "POST", {full_name:name, email, password});
     await api(`/users/${user.id}/kyc/verify?approve=true`, "POST");
     await api(`/users/${user.id}/pin`, "POST", {pin});
-    // Registering doesn't itself start a session — log in right after with
-    // the same credentials so the server issues a session cookie.
     const loggedIn = await api("/auth/login", "POST", {email, password});
     state.user = loggedIn;
     enterDashboard();
@@ -420,26 +400,26 @@ async function loadWallets(){
   state.wallets = await api(`/wallets/mine`);
   const list = $("walletList");
   if(state.wallets.length === 0){
-    list.innerHTML = `<p class="empty-note">No envelopes yet — seal your first one below.</p>`;
+    list.innerHTML = `<p class="empty-note">No envelopes yet — create your first one below.</p>`;
     return;
   }
   list.innerHTML = state.wallets.map(w => `
-    <div class="envelope">
-      <div class="envelope-top">
-        <div>
-          <div class="envelope-category">${w.category.replace('_',' ')}</div>
-          <div class="envelope-freq">${w.frequency || 'manual'}</div>
+    <div class="wallet-card">
+      <div class="wallet-head">
+        <div class="wallet-cat">
+          <span class="cat-dot" style="background:${categoryColor(w.category)}"></span>
+          ${w.category.replace('_',' ')}
         </div>
-        <div class="seal">&#128274;</div>
+        <div class="wallet-freq">${w.frequency || 'manual'}</div>
       </div>
-      <div class="envelope-balance">${w.balance.toLocaleString()}<span class="unit">SIM</span></div>
+      <div class="wallet-balance">${w.balance.toLocaleString()}<span class="unit">SIM</span></div>
       ${w.target_amount ? `
         <div class="progress-track"><div class="progress-fill" style="width:${Math.min(w.progress_pct,100)}%"></div></div>
         <div class="progress-label">${w.progress_pct}% of ${w.target_amount.toLocaleString()} SIM target</div>
       ` : ``}
-      <div class="envelope-actions">
-        <button class="btn-fund" onclick="openFundModal('${w.id}')">Add money</button>
-        <button class="btn-spend" onclick="openSpendModal('${w.id}')">Spend</button>
+      <div class="wallet-actions">
+        <button class="btn btn-secondary" onclick="openFundModal('${w.id}')">Add money</button>
+        <button class="btn btn-secondary" onclick="openSpendModal('${w.id}')">Spend</button>
       </div>
     </div>
   `).join("");
@@ -453,7 +433,6 @@ async function createWallet(){
   const target = $("newTarget").value;
   const frequency = $("newFreq").value;
   try{
-    // No user_id sent — the server reads it from the session cookie.
     await api("/wallets", "POST", {
       category,
       target_amount: target ? parseFloat(target) : null,
@@ -514,70 +493,4 @@ async function loadMerchantsForSpend(){
 
 async function submitSpend(){
   const merchantId = $("merchantSelect").value;
-  const amount = parseFloat($("spendAmount").value);
-  if(!merchantId || !amount || amount <= 0){
-    showMsg($("spendMsg"), "Pick a merchant and enter an amount.", "error");
-    return;
-  }
-  try{
-    const txn = await api("/payments/initiate", "POST", {
-      wallet_id: state.activeWalletId, merchant_id: merchantId, amount
-    });
-    state.pendingTxnId = txn.id;
-    closeModal("spendModal");
-    $("pinSub").textContent = `Paying ${amount.toLocaleString()} SIM. Enter your PIN to authorize.`;
-    $("pinInput").value = "";
-    $("pinMsg").innerHTML = "";
-    $("pinModal").classList.remove("hidden");
-  }catch(e){
-    // purpose mismatch or insufficient funds land here — show the rejection stamp
-    showMsg($("spendMsg"), "&#10007; REJECTED &mdash; " + (e.detail || "payment could not be initiated."), "error");
-  }
-}
-
-async function submitConfirm(){
-  const pin = $("pinInput").value.trim();
-  if(!pin){ showMsg($("pinMsg"), "Enter your PIN.", "error"); return; }
-  try{
-    await api(`/payments/${state.pendingTxnId}/confirm`, "POST", {pin});
-    closeModal("pinModal");
-    await loadWallets();
-    await loadActivity(state.activeWalletId);
-  }catch(e){
-    showMsg($("pinMsg"), e.detail || "PIN incorrect or payment could not be confirmed.", "error");
-  }
-}
-
-// ---------- activity / ledger ----------
-async function loadActivity(walletId){
-  try{
-    const txns = await api(`/payments/wallet/${walletId}`);
-    const list = $("activityList");
-    if(txns.length === 0){
-      list.innerHTML = `<p class="empty-note">No transactions on this envelope yet.</p>`;
-      return;
-    }
-    list.innerHTML = txns.map(t => `
-      <div class="ledger-row">
-        <div>
-          <div class="ledger-merchant">${t.amount.toLocaleString()} SIM</div>
-          <div class="mono" style="font-size:0.7rem;color:var(--text-muted);">${new Date(t.created_at).toLocaleString()}</div>
-        </div>
-        <span class="stamp ${stampClass(t.status)}">${t.status.replace(/_/g,' ')}</span>
-      </div>
-    `).join("");
-  }catch(e){ /* silent */ }
-}
-
-function stampClass(status){
-  if(status === "settled") return "stamp-settled";
-  if(status.startsWith("rejected") || status.startsWith("failed")) return "stamp-rejected";
-  if(status === "disputed") return "stamp-disputed";
-  return "stamp-pending";
-}
-
-function closeModal(id){ $(id).classList.add("hidden"); }
-</script>
-
-</body>
-</html>
+  const amount = parseFloat($("spendAm
