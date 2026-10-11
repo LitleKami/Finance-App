@@ -493,4 +493,69 @@ async function loadMerchantsForSpend(){
 
 async function submitSpend(){
   const merchantId = $("merchantSelect").value;
-  const amount = parseFloat($("spendAm
+  const amount = parseFloat($("spendAmount").value);
+  if(!merchantId || !amount || amount <= 0){
+    showMsg($("spendMsg"), "Pick a merchant and enter an amount.", "error");
+    return;
+  }
+  try{
+    const txn = await api("/payments/initiate", "POST", {
+      wallet_id: state.activeWalletId, merchant_id: merchantId, amount
+    });
+    state.pendingTxnId = txn.id;
+    closeModal("spendModal");
+    $("pinSub").textContent = `Paying ${amount.toLocaleString()} SIM. Enter your PIN to authorize.`;
+    $("pinInput").value = "";
+    $("pinMsg").innerHTML = "";
+    $("pinModal").classList.remove("hidden");
+  }catch(e){
+    showMsg($("spendMsg"), "Payment rejected: " + (e.detail || "could not be initiated."), "error");
+  }
+}
+
+async function submitConfirm(){
+  const pin = $("pinInput").value.trim();
+  if(!pin){ showMsg($("pinMsg"), "Enter your PIN.", "error"); return; }
+  try{
+    await api(`/payments/${state.pendingTxnId}/confirm`, "POST", {pin});
+    closeModal("pinModal");
+    await loadWallets();
+    await loadActivity(state.activeWalletId);
+  }catch(e){
+    showMsg($("pinMsg"), e.detail || "PIN incorrect or payment could not be confirmed.", "error");
+  }
+}
+
+// ---------- activity ----------
+async function loadActivity(walletId){
+  try{
+    const txns = await api(`/payments/wallet/${walletId}`);
+    const list = $("activityList");
+    if(txns.length === 0){
+      list.innerHTML = `<p class="empty-note">No transactions on this envelope yet.</p>`;
+      return;
+    }
+    list.innerHTML = txns.map(t => `
+      <div class="activity-row">
+        <div>
+          <div class="activity-amount">${t.amount.toLocaleString()} SIM</div>
+          <div class="activity-time">${new Date(t.created_at).toLocaleString()}</div>
+        </div>
+        <span class="chip ${chipClass(t.status)}">${t.status.replace(/_/g,' ')}</span>
+      </div>
+    `).join("");
+  }catch(e){ /* silent */ }
+}
+
+function chipClass(status){
+  if(status === "settled") return "chip-settled";
+  if(status.startsWith("rejected") || status.startsWith("failed")) return "chip-rejected";
+  if(status === "disputed") return "chip-disputed";
+  return "chip-pending";
+}
+
+function closeModal(id){ $(id).classList.add("hidden"); }
+</script>
+
+</body>
+</html>
